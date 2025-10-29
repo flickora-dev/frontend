@@ -3,7 +3,7 @@ import { moviesAPI } from '../api';
 import { Search, MessageCircle, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useState } from 'react';
-import LoadingSpinner from '../components/common/LoadingSpinner';
+import LoadingSpinner from '../components/common/loadingSpinner';
 import '../styles/pages/Home.css';
 
 const Home = () => {
