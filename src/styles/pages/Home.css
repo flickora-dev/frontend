@@ -1,37 +1,46 @@
 .home-new {
-  min-height: 100vh;
-  background: #0A0A0A;
+  min-height: 100%;
+  background: var(--color-bg);
 }
 
 .hero-section {
-  height: 70vh;
-  background: linear-gradient(135deg, #0A0E27 0%, #1a1f3a 50%, #0A0E27 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  padding: 4rem 2rem;
+  text-align: center;
   position: relative;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>');
+  opacity: 0.3;
 }
 
 .hero-content {
-  text-align: center;
+  position: relative;
   z-index: 1;
   max-width: 800px;
-  padding: 2rem;
+  margin: 0 auto;
 }
 
 .hero-title {
-  font-size: 4rem;
+  font-size: 3rem;
   font-weight: 700;
+  color: white;
   margin-bottom: 1rem;
-  color: #FFFFFF;
-  line-height: 1.1;
+  line-height: 1.2;
 }
 
 .hero-subtitle {
-  font-size: 1.5rem;
-  color: #D1D5DB;
-  margin-bottom: 3rem;
-  font-weight: 400;
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 2rem;
 }
 
 .hero-actions {
@@ -42,144 +51,128 @@
 }
 
 .hero-btn {
+  padding: 1rem 2rem;
+  border-radius: var(--border-radius);
+  font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 2rem;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s;
+  gap: 0.5rem;
+  transition: var(--transition);
+  min-width: 180px;
+  justify-content: center;
 }
 
 .hero-btn-primary {
-  background: #3B82F6;
-  color: #FFFFFF;
+  background: white;
+  color: var(--color-primary);
 }
 
 .hero-btn-primary:hover {
-  background: #2563EB;
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
 
 .hero-btn-secondary {
-  background: rgba(255, 255, 255, 0.1);
-  color: #FFFFFF;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid white;
 }
 
 .hero-btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: white;
+  color: var(--color-primary);
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(255, 255, 255, 0.1);
 }
 
 .home-content {
+  padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 2rem;
 }
 
 .popular-questions-section {
-  padding: 4rem 0;
+  margin-bottom: 3rem;
 }
 
 .section-title {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 2rem;
-  color: #FFFFFF;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--color-text);
 }
 
 .popular-questions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
 }
 
 .question-card {
-  background: rgba(31, 41, 55, 0.5);
-  backdrop-filter: blur(10px);
-  border: 1px solid #374151;
-  border-radius: 12px;
-  padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  transition: all 0.3s;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  padding: 1.5rem;
+  transition: var(--transition);
 }
 
 .question-card:hover {
-  transform: translateY(-4px);
-  border-color: #3B82F6;
-  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
 }
 
 .question-text {
-  color: #D1D5DB;
-  font-size: 1rem;
+  color: var(--color-text);
+  margin-bottom: 1rem;
   line-height: 1.6;
-  margin: 0;
-  flex: 1;
 }
 
 .question-btn {
-  background: #0A0A0A;
-  color: #FFFFFF;
-  border: 1px solid #374151;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--color-primary);
+  color: white;
+  border-radius: var(--border-radius);
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  align-self: flex-start;
+  transition: var(--transition);
 }
 
 .question-btn:hover {
-  background: #3B82F6;
-  border-color: #3B82F6;
-  transform: translateX(4px);
+  background: var(--color-primary-dark);
 }
 
 .movies-section {
-  padding: 3rem 0;
+  margin-bottom: 3rem;
 }
 
 .movies-section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .movies-carousel {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 1.5rem;
+  padding: 0.5rem 0;
 }
 
 .movie-card-home {
+  transition: var(--transition);
   cursor: pointer;
-  transition: transform 0.3s;
-  text-decoration: none;
-  color: inherit;
 }
 
 .movie-card-home:hover {
-  transform: scale(1.05);
+  transform: translateY(-4px);
 }
 
 .movie-poster-home {
   position: relative;
-  border-radius: 8px;
+  border-radius: var(--border-radius);
   overflow: hidden;
-  margin-bottom: 0.75rem;
   aspect-ratio: 2/3;
+  background: var(--color-card);
 }
 
 .movie-poster-home img {
@@ -192,64 +185,112 @@
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.8);
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
   display: flex;
   align-items: center;
   gap: 0.25rem;
+  color: var(--color-yellow);
   font-size: 0.875rem;
+  font-weight: 600;
 }
 
-.movie-rating-home .rating-icon {
-  color: #FBBF24;
-  fill: #FBBF24;
+.rating-icon {
+  fill: var(--color-yellow);
 }
 
 .movie-title-home {
-  font-size: 0.95rem;
-  font-weight: 600;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--color-text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: #FFFFFF;
+  line-height: 1.4;
 }
 
 @media (max-width: 768px) {
+  .hero-section {
+    padding: 3rem 1.5rem;
+  }
+
   .hero-title {
-    font-size: 2.5rem;
+    font-size: 2rem;
   }
 
   .hero-subtitle {
-    font-size: 1.125rem;
-    margin-bottom: 2rem;
+    font-size: 1rem;
   }
 
   .hero-actions {
     flex-direction: column;
-    width: 100%;
+    gap: 0.75rem;
   }
 
   .hero-btn {
     width: 100%;
-    justify-content: center;
+    min-width: auto;
+    padding: 0.875rem 1.5rem;
+  }
+
+  .home-content {
+    padding: 1.5rem 1rem;
+  }
+
+  .section-title {
+    font-size: 1.25rem;
   }
 
   .popular-questions-grid {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
 
-  .popular-questions-section {
-    padding: 2rem 0;
+  .question-card {
+    padding: 1rem;
   }
 
   .movies-carousel {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: 1rem;
   }
 
+  .movie-title-home {
+    font-size: 0.8rem;
+  }
+
+  .movie-rating-home {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.4rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: 2rem 1rem;
+  }
+
+  .hero-title {
+    font-size: 1.5rem;
+  }
+
+  .hero-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .hero-btn {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+  }
+
   .home-content {
-    padding: 0 1rem;
+    padding: 1rem 0.75rem;
+  }
+
+  .movies-carousel {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.75rem;
   }
 }

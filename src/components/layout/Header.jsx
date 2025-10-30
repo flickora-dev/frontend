@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Moon, Bell, LogOut, User } from 'lucide-react';
+import { Search, Moon, Bell, LogOut, User, Menu } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import '../../styles/components/Header.css';
 
-const Header = () => {
+const Header = ({ onMenuClick }) => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,6 +26,10 @@ const Header = () => {
 
   return (
     <header className="header">
+      <button className="menu-btn" onClick={onMenuClick}>
+        <Menu size={24} />
+      </button>
+
       <div className="search-bar">
         <form onSubmit={handleSearch}>
           <Search className="search-icon" size={20} />
@@ -33,7 +37,7 @@ const Header = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search movies, shows, or discussions..."
+            placeholder="Search movies..."
             className="search-input"
           />
         </form>
@@ -42,11 +46,11 @@ const Header = () => {
       <div className="header-actions">
         {isAuthenticated ? (
           <>
-            <button className="header-btn">
+            <button className="header-btn header-btn-icon">
               <Moon size={20} />
             </button>
 
-            <button className="header-btn">
+            <button className="header-btn header-btn-icon">
               <Bell size={20} />
             </button>
 

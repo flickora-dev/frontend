@@ -1,13 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Home, Film, TrendingUp, Heart, Clock, 
-  MessageCircle, Settings, ChevronRight, Folder 
+  MessageCircle, Settings, ChevronRight, Folder, X 
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { moviesAPI } from '../../api';
 import '../../styles/components/Sidebar.css';
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
   const [genres, setGenres] = useState([]);
   const [showGenres, setShowGenres] = useState(false);
@@ -31,6 +31,12 @@ const Sidebar = () => {
 
   const isActive = (path) => location.pathname === path;
 
+  const handleLinkClick = () => {
+    if (window.innerWidth <= 768) {
+      onClose();
+    }
+  };
+
   const navItems = [
     { path: '/', icon: Home, label: 'Home' },
     { path: '/movies', icon: Film, label: 'Browse Movies' },
@@ -40,12 +46,15 @@ const Sidebar = () => {
   ];
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
       <div className="sidebar-header">
         <div className="sidebar-logo">
           <Film size={24} />
         </div>
         <span className="sidebar-title">flickora</span>
+        <button className="sidebar-close" onClick={onClose}>
+          <X size={24} />
+        </button>
       </div>
 
       <nav className="sidebar-nav scrollbar-hide">
@@ -55,6 +64,7 @@ const Sidebar = () => {
             <Link
               key={item.path}
               to={item.path}
+              onClick={handleLinkClick}
               className={`nav-link ${isActive(item.path) ? 'active' : ''}`}
             >
               <Icon size={20} />
@@ -83,6 +93,7 @@ const Sidebar = () => {
               <Link
                 key={genre.id}
                 to={`/movies?genre=${genre.tmdb_id}`}
+                onClick={handleLinkClick}
                 className="nav-submenu-link"
               >
                 {genre.name}
@@ -95,6 +106,7 @@ const Sidebar = () => {
 
         <Link
           to="/chat"
+          onClick={handleLinkClick}
           className={`nav-link ${isActive('/chat') ? 'active' : ''}`}
         >
           <MessageCircle size={20} />
@@ -103,6 +115,7 @@ const Sidebar = () => {
 
         <Link
           to="/settings"
+          onClick={handleLinkClick}
           className={`nav-link ${isActive('/settings') ? 'active' : ''}`}
         >
           <Settings size={20} />
