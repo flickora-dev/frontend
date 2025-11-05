@@ -62,11 +62,31 @@ const useAuthStore = create(
 
           return { success: true };
         } catch (error) {
-          const errorMessage =
-            error.response?.data?.username?.[0] ||
-            error.response?.data?.email?.[0] ||
-            error.response?.data?.password?.[0] ||
-            'Registration failed';
+          // Extract error message from response
+          const errorData = error.response?.data;
+          let errorMessage = 'Registration failed';
+          
+          if (errorData) {
+            // Check for field-specific errors
+            if (errorData.username && Array.isArray(errorData.username)) {
+              errorMessage = errorData.username[0];
+            } else if (errorData.email && Array.isArray(errorData.email)) {
+              errorMessage = errorData.email[0];
+            } else if (errorData.password && Array.isArray(errorData.password)) {
+              errorMessage = errorData.password[0];
+            } else if (errorData.password2 && Array.isArray(errorData.password2)) {
+              errorMessage = errorData.password2[0];
+            } else if (errorData.non_field_errors && Array.isArray(errorData.non_field_errors)) {
+              errorMessage = errorData.non_field_errors[0];
+            } else if (typeof errorData === 'string') {
+              errorMessage = errorData;
+            } else if (errorData.error) {
+              errorMessage = errorData.error;
+            } else if (errorData.detail) {
+              errorMessage = errorData.detail;
+            }
+          }
+          
           set({ error: errorMessage, isLoading: false });
           return { success: false, error: errorMessage };
         }

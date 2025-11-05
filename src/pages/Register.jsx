@@ -15,16 +15,34 @@ const Register = () => {
     password: '',
     password2: '',
   });
+  const [localError, setLocalError] = useState('');
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     clearError();
+    setLocalError('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    clearError();
+    setLocalError('');
     
+    // Validate required fields
+    if (!formData.username || !formData.email || !formData.password || !formData.password2) {
+      setLocalError("All fields are required.");
+      return;
+    }
+
+    // Validate passwords match before submitting
     if (formData.password !== formData.password2) {
+      setLocalError("Passwords don't match.");
+      return;
+    }
+
+    // Validate password length
+    if (formData.password.length < 8) {
+      setLocalError("Password must be at least 8 characters long.");
       return;
     }
 
@@ -56,9 +74,9 @@ const Register = () => {
 
         <div className="login-form-wrapper">
           <form onSubmit={handleSubmit} className="login-form">
-            {error && (
+            {(error || localError) && (
               <div className="error-message">
-                {error}
+                {error || localError}
               </div>
             )}
 
