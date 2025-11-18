@@ -10,6 +10,8 @@ const axiosInstance = axios.create({
   withCredentials: false,
 });
 
+console.log('API_URL:', API_URL);
+
 // Request interceptor to add auth token
 axiosInstance.interceptors.request.use(
   (config) => {
