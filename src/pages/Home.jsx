@@ -20,8 +20,18 @@ const Home = () => {
     queryFn: () => moviesAPI.getMovies({ limit: 20, ordering: '-imdb_rating' })
   });
 
-  const trendingMovies = trendingData?.data?.results || trendingData?.data || [];
-  const topMovies = topMoviesData?.data?.results || topMoviesData?.data || [];
+  // Ensure we always get an array
+  const trendingMovies = Array.isArray(trendingData?.data?.results)
+    ? trendingData.data.results
+    : Array.isArray(trendingData?.data)
+    ? trendingData.data
+    : [];
+
+  const topMovies = Array.isArray(topMoviesData?.data?.results)
+    ? topMoviesData.data.results
+    : Array.isArray(topMoviesData?.data)
+    ? topMoviesData.data
+    : [];
 
   const popularQuestions = [
     {
