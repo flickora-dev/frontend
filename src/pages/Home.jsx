@@ -20,7 +20,7 @@ const Home = () => {
     queryFn: () => moviesAPI.getMovies({ limit: 20, ordering: '-imdb_rating' })
   });
 
-  // Ensure we always get an array
+  // Ensure we always get an array test
   const trendingMovies = Array.isArray(trendingData?.data?.results)
     ? trendingData.data.results
     : Array.isArray(trendingData?.data)
