@@ -1,14 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { moviesAPI } from '../api';
-import { Search, MessageCircle, Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, MessageCircle, Star, Loader2, Sparkles } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useState } from 'react';
-import LoadingSpinner from '../components/common/loadingSpinner';
-import '../styles/pages/Home.css';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader } from '../components/ui/card';
+import { Separator } from '../components/ui/separator';
 
 const Home = () => {
   const navigate = useNavigate();
-  const [trendingScroll, setTrendingScroll] = useState(0);
 
   const { data: trendingData, isLoading: trendingLoading } = useQuery({
     queryKey: ['trending'],
@@ -20,7 +19,7 @@ const Home = () => {
     queryFn: () => moviesAPI.getMovies({ limit: 20, ordering: '-imdb_rating' })
   });
 
-  // Ensure we always get an array test
+  // Ensure we always get an array
   const trendingMovies = Array.isArray(trendingData?.data?.results)
     ? trendingData.data.results
     : Array.isArray(trendingData?.data)
@@ -53,113 +52,160 @@ const Home = () => {
   };
 
   if (trendingLoading || topLoading) {
-    return <LoadingSpinner size="lg" />;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
-    <div className="home-new">
-      <div className="hero-section">
-        <div className="hero-content">
-          <h1 className="hero-title">Welcome to CineChat</h1>
-          <p className="hero-subtitle">Your AI-Powered Movie Discovery Platform</p>
-          
-          <div className="hero-actions">
-            <button 
-              className="hero-btn hero-btn-primary"
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-b from-primary/10 to-background py-20 px-4">
+        <div className="max-w-4xl mx-auto text-center space-y-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm text-primary mb-4">
+            <Sparkles className="w-4 h-4" />
+            AI-Powered Movie Discovery
+          </div>
+          <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
+            Welcome to <span className="text-primary">flickora</span>
+          </h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Discover your next favorite movie with AI-powered recommendations and insights
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+            <Button
+              size="lg"
               onClick={() => navigate('/movies')}
+              className="gap-2"
             >
-              <Search size={20} />
+              <Search className="w-5 h-5" />
               Search Movies
-            </button>
-            <button 
-              className="hero-btn hero-btn-secondary"
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
               onClick={() => navigate('/chat')}
+              className="gap-2"
             >
-              <MessageCircle size={20} />
+              <MessageCircle className="w-5 h-5" />
               Start Chatting
-            </button>
+            </Button>
           </div>
         </div>
       </div>
 
-      <div className="home-content">
-        <div className="popular-questions-section">
-          <h2 className="section-title">Popular Questions</h2>
-          
-          <div className="popular-questions-grid">
+      <div className="max-w-7xl mx-auto px-4 py-12 space-y-12">
+        {/* Popular Questions */}
+        <section className="space-y-6">
+          <div className="flex items-center gap-3">
+            <h2 className="text-3xl font-bold">Popular Questions</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {popularQuestions.map((item, index) => (
-              <div key={index} className="question-card">
-                <p className="question-text">{item.question}</p>
-                <button 
-                  className="question-btn"
-                  onClick={() => handleAskAI(item.question)}
-                >
-                  Ask AI
-                </button>
-              </div>
+              <Card
+                key={index}
+                className="cursor-pointer hover:border-primary/50 transition-all hover:shadow-lg group flex flex-col h-full"
+                onClick={() => handleAskAI(item.question)}
+              >
+                <CardHeader className="flex-1">
+                  <CardDescription className="text-base group-hover:text-foreground transition-colors">
+                    {item.question}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <Button variant="secondary" size="sm" className="w-full gap-2 bg-primary/10 hover:bg-primary/20 text-primary">
+                    <MessageCircle className="w-4 h-4" />
+                    Ask AI
+                  </Button>
+                </CardContent>
+              </Card>
             ))}
           </div>
-        </div>
+        </section>
 
-        <div className="movies-section">
-          <div className="movies-section-header">
-            <h2 className="section-title">Trending This Week</h2>
+        <Separator />
+
+        {/* Trending Movies */}
+        <section className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-3xl font-bold">Trending This Week</h2>
           </div>
-          
-          <div className="movies-carousel">
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {trendingMovies.slice(0, 10).map((movie) => (
-              <Link 
+              <Link
                 key={movie.id}
                 to={`/movies/${movie.id}`}
-                className="movie-card-home"
+                className="group flex"
               >
-                <div className="movie-poster-home">
-                  <img
-                    src={movie.poster_url || 'https://via.placeholder.com/300x450?text=No+Poster'}
-                    alt={movie.title}
-                  />
-                  {movie.imdb_rating && (
-                    <div className="movie-rating-home">
-                      <Star className="rating-icon" size={14} />
-                      <span>{movie.imdb_rating}</span>
-                    </div>
-                  )}
-                </div>
-                <h3 className="movie-title-home">{movie.title}</h3>
+                <Card className="overflow-hidden border-0 bg-card/50 hover:bg-card transition-all hover:scale-105 flex flex-col w-full h-full">
+                  <div className="aspect-[2/3] relative overflow-hidden">
+                    <img
+                      src={movie.poster_url || 'https://via.placeholder.com/300x450?text=No+Poster'}
+                      alt={movie.title}
+                      className="object-cover w-full h-full"
+                    />
+                    {movie.imdb_rating && (
+                      <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-md bg-black/70 backdrop-blur-sm text-xs font-medium">
+                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                        <span>{movie.imdb_rating}</span>
+                      </div>
+                    )}
+                  </div>
+                  <CardContent className="p-3 min-h-[3rem] flex items-start">
+                    <h3 className="font-medium text-sm line-clamp-2 group-hover:text-primary transition-colors w-full">
+                      {movie.title}
+                    </h3>
+                  </CardContent>
+                </Card>
               </Link>
             ))}
           </div>
-        </div>
+        </section>
 
-        <div className="movies-section">
-          <div className="movies-section-header">
-            <h2 className="section-title">Recently Viewed</h2>
+        <Separator />
+
+        {/* Top Rated Movies */}
+        <section className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-3xl font-bold">Top Rated</h2>
           </div>
-          
-          <div className="movies-carousel">
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {topMovies.slice(0, 10).map((movie) => (
-              <Link 
+              <Link
                 key={movie.id}
                 to={`/movies/${movie.id}`}
-                className="movie-card-home"
+                className="group flex"
               >
-                <div className="movie-poster-home">
-                  <img
-                    src={movie.poster_url || 'https://via.placeholder.com/300x450?text=No+Poster'}
-                    alt={movie.title}
-                  />
-                  {movie.imdb_rating && (
-                    <div className="movie-rating-home">
-                      <Star className="rating-icon" size={14} />
-                      <span>{movie.imdb_rating}</span>
-                    </div>
-                  )}
-                </div>
-                <h3 className="movie-title-home">{movie.title}</h3>
+                <Card className="overflow-hidden border-0 bg-card/50 hover:bg-card transition-all hover:scale-105 flex flex-col w-full h-full">
+                  <div className="aspect-[2/3] relative overflow-hidden">
+                    <img
+                      src={movie.poster_url || 'https://via.placeholder.com/300x450?text=No+Poster'}
+                      alt={movie.title}
+                      className="object-cover w-full h-full"
+                    />
+                    {movie.imdb_rating && (
+                      <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-md bg-black/70 backdrop-blur-sm text-xs font-medium">
+                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                        <span>{movie.imdb_rating}</span>
+                      </div>
+                    )}
+                  </div>
+                  <CardContent className="p-3 min-h-[3rem] flex items-start">
+                    <h3 className="font-medium text-sm line-clamp-2 group-hover:text-primary transition-colors w-full">
+                      {movie.title}
+                    </h3>
+                  </CardContent>
+                </Card>
               </Link>
             ))}
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );

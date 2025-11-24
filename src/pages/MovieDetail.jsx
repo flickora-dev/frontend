@@ -2,11 +2,14 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { moviesAPI } from '../api';
 import { chatAPI } from '../api/chat';
-import { Star, Clock, Calendar, ArrowLeft, ChevronDown, Film, Heart, Share2, Send } from 'lucide-react';
+import { Star, ArrowLeft, ChevronDown, Film, Heart, Share2, Send, Sparkles, Loader2, User } from 'lucide-react';
 import { useState, useRef, useEffect  } from 'react';
-import LoadingSpinner from '../components/common/loadingSpinner';
-import '../styles/pages/MovieDetail.css';
 import ReactMarkdown from 'react-markdown';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
+import { Separator } from '../components/ui/separator';
+import { cn } from '../lib/utils';
 
 const MovieDetail = () => {
   const { id } = useParams();
@@ -129,299 +132,411 @@ const MovieDetail = () => {
 
 
   if (movieLoading) {
-    return <LoadingSpinner size="lg" />;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   if (!movie) {
     return (
-      <div className="movie-detail-error">
-        <h1>Movie not found</h1>
-        <Link to="/" className="btn btn-primary">
-          <ArrowLeft size={20} />
-          Back to Home
-        </Link>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <h1 className="text-2xl font-bold">Movie not found</h1>
+        <Button asChild>
+          <Link to="/">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Home
+          </Link>
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="movie-detail">
-      <div className="movie-detail-container">
-        <div className="movie-detail-main">
-          <Link to="/" className="back-button">
-            <ArrowLeft size={20} />
-            Back
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+        {/* Back Button */}
+        <Button variant="ghost" asChild className="gap-2">
+          <Link to="/movies">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Movies
           </Link>
+        </Button>
 
-          <div className="movie-detail-content-wrapper">
-            <div className="movie-detail-poster">
-              <img 
-                src={movie.poster_url || 'https://via.placeholder.com/300x450?text=No+Poster'} 
-                alt={movie.title}
-              />
-            </div>
-
-            <div className="movie-detail-info">
-              <h1 className="movie-detail-title">{movie.title}</h1>
-              
-              <div className="movie-detail-meta">
-                <span className="meta-year">{movie.year}</span>
-                <span className="meta-separator">•</span>
-                {movie.runtime && (
-                  <>
-                    <span className="meta-runtime">{movie.runtime} min</span>
-                    <span className="meta-separator">•</span>
-                  </>
-                )}
-                {movie.director && (
-                  <span className="meta-director">Directed by {movie.director}</span>
-                )}
-              </div>
-
-              {movie.imdb_rating && (
-                <div className="movie-detail-rating">
-                  {[...Array(5)].map((_, i) => (
-                    <Star 
-                      key={i} 
-                      className={`rating-star ${i < Math.floor(movie.imdb_rating / 2) ? 'filled' : ''}`}
-                      size={24}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          {/* Main Content */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Movie Header */}
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex flex-col md:flex-row gap-6">
+                  {/* Poster */}
+                  <div className="flex-shrink-0">
+                    <img
+                      src={movie.poster_url || 'https://via.placeholder.com/300x450?text=No+Poster'}
+                      alt={movie.title}
+                      className="w-full md:w-48 rounded-lg object-cover shadow-lg"
                     />
-                  ))}
-                  <span className="rating-value">{movie.imdb_rating}/10</span>
-                </div>
-              )}
-
-              {movie.genres && movie.genres.length > 0 && (
-                <div className="movie-detail-genres">
-                  {movie.genres.map(genre => (
-                    <span key={genre.id} className="genre-tag">
-                      {genre.name}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {movie.plot_summary && (
-            <div className="synopsis-section">
-              <h2 className="section-title">Synopsis</h2>
-              <div className="synopsis-content">
-                <p className={showFullSynopsis ? 'full' : 'truncated'}>
-                  {movie.plot_summary}
-                </p>
-                {movie.plot_summary.length > 300 && (
-                  <button 
-                    className="read-more-btn"
-                    onClick={() => setShowFullSynopsis(!showFullSynopsis)}
-                  >
-                    <ChevronDown 
-                      className={`chevron ${showFullSynopsis ? 'expanded' : ''}`}
-                      size={16}
-                    />
-                    {showFullSynopsis ? 'Read Less' : 'Read More'}
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {cast.length > 0 && (
-            <div className="cast-section">
-              <h2 className="section-title">Cast</h2>
-              <div className="cast-grid">
-                {cast.map((actor, index) => (
-                  <div key={index} className="cast-member">
-                    <div className="cast-avatar">
-                      <img 
-                        src={actor.profile_path || 'https://via.placeholder.com/100?text=No+Photo'} 
-                        alt={actor.name} 
-                      />
-                    </div>
-                    <div className="cast-info">
-                      <h3 className="cast-name">{actor.name}</h3>
-                      <p className="cast-role">{actor.character}</p>
-                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
 
-          {sections.length > 0 && (
-            <div className="movie-sections">
-              <div className="sections-header">
-                <Film size={24} className="sections-icon" />
-                <h2 className="sections-title">AI-Generated Analysis</h2>
-              </div>
-              
-              <div className="sections-list">
-                {sections.map((section) => (
-                  <div key={section.id} className="section-card">
-                    <button 
-                      className="section-header"
-                      onClick={() => toggleSection(section.id)}
-                    >
-                      <h3 className="section-title-text">{section.section_type_display}</h3>
-                      <div className="section-meta">
-                        <span className="section-word-count">{section.word_count} words</span>
-                        <ChevronDown 
-                          className={`section-chevron ${expandedSections[section.id] ? 'expanded' : ''}`}
-                          size={20}
-                        />
-                      </div>
-                    </button>
-                    
-                    {expandedSections[section.id] && (
-                      <div className="section-content">
-                        <p>{section.content}</p>
-                        {section.key_topics && section.key_topics.length > 0 && (
-                          <div className="section-topics">
-                            <span className="topics-label">Key Topics:</span>
-                            <div className="topics-list">
-                              {section.key_topics.map((topic, index) => (
-                                <span key={index} className="topic-tag">{topic}</span>
-                              ))}
-                            </div>
-                          </div>
+                  {/* Info */}
+                  <div className="flex-1 space-y-4">
+                    <div>
+                      <h1 className="text-3xl md:text-4xl font-bold mb-2">{movie.title}</h1>
+                      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                        <span>{movie.year}</span>
+                        {movie.runtime && (
+                          <>
+                            <span>•</span>
+                            <span>{movie.runtime} min</span>
+                          </>
+                        )}
+                        {movie.director && (
+                          <>
+                            <span>•</span>
+                            <span>Directed by {movie.director}</span>
+                          </>
                         )}
                       </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {similarMovies.length > 0 && (
-            <div className="similar-movies-section">
-              <h2 className="section-title">Similar Movies</h2>
-              <div className="similar-movies-grid">
-                {similarMovies.map((similar) => (
-                  <Link 
-                    key={similar.id}
-                    to={`/movies/${similar.id}`}
-                    className="similar-movie-card"
-                  >
-                    <img 
-                      src={similar.poster_url || 'https://via.placeholder.com/200x300?text=No+Poster'} 
-                      alt={similar.title} 
-                    />
-                    <div className="similar-movie-info">
-                      <h3 className="similar-movie-title">{similar.title}</h3>
-                      <p className="similar-movie-year">{similar.year}</p>
                     </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
 
-        <div className="movie-detail-sidebar">
-          <div className="chat-widget">
-            <div className="chat-title-wrapper">
-              <svg 
-                className="chat-title-icon" 
-                width="20" 
-                height="20" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth="2" 
-                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                />
-              </svg>
-              <h3 className="chat-title">Chat with AI</h3>
-            </div>
+                    {movie.imdb_rating && (
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={cn(
+                                "w-5 h-5",
+                                i < Math.floor(movie.imdb_rating / 2)
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-muted"
+                              )}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-lg font-semibold">{movie.imdb_rating}/10</span>
+                      </div>
+                    )}
 
-            {messages.length === 0 && (
-              <div className="chat-welcome">
-                <p>
-                  Hi! I'm here to help you explore this movie. Ask me anything about{' '}
-                  <span className="chat-welcome-movie-title">{movie.title}</span>!
-                </p>
-              </div>
-            )}
-            
-            <div className="chat-messages" ref={messagesContainerRef}>
-              {messages.map((msg, index) => (
-                <div key={index} className={`chat-message ${msg.role === 'user' ? 'user-message' : 'ai-message'} ${msg.isError ? 'error-message' : ''}`}>
-                  <ReactMarkdown>
-                    {msg.role === 'assistant' && isTyping && index === messages.length - 1
-                      ? typingMessage
-                      : msg.content}
-                  </ReactMarkdown>
-                </div>
-              ))}
+                    {movie.genres && movie.genres.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {movie.genres.map((genre) => (
+                          <span
+                            key={genre.id}
+                            className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium"
+                          >
+                            {genre.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
 
-              {sendMessageMutation.isPending && (
-                <div className="chat-message ai-message loading-message">
-                  <div className="loading-dots">
-                    <span></span>
-                    <span></span>
-                    <span></span>
+                    {/* Action Buttons */}
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      <Button variant="default" className="gap-2">
+                        <Heart className="w-4 h-4" />
+                        Add to Favorites
+                      </Button>
+                      <Button variant="outline" className="gap-2">
+                        <Share2 className="w-4 h-4" />
+                        Share
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              )}
-              
-            </div>
+              </CardContent>
+            </Card>
 
-            <form onSubmit={handleSendMessage} className="chat-input-form">
-              <input 
-                type="text" 
-                value={chatMessage}
-                onChange={(e) => setChatMessage(e.target.value)}
-                placeholder="Ask about this movie..."
-                className="chat-input"
-                // disabled={sendMessageMutation.isPending}
-              />
-              <button 
-                type="submit" 
-                className="chat-send-btn" 
-                disabled={!chatMessage.trim() || sendMessageMutation.isPending}
-              >
-                <Send size={20} />
-              </button>
-            </form>
+            {/* Synopsis */}
+            {movie.plot_summary && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Synopsis</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className={cn(
+                    "text-muted-foreground leading-relaxed",
+                    !showFullSynopsis && movie.plot_summary.length > 300 && "line-clamp-4"
+                  )}>
+                    {movie.plot_summary}
+                  </p>
+                  {movie.plot_summary.length > 300 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowFullSynopsis(!showFullSynopsis)}
+                      className="mt-2 gap-2"
+                    >
+                      {showFullSynopsis ? 'Read Less' : 'Read More'}
+                      <ChevronDown className={cn("w-4 h-4 transition-transform", showFullSynopsis && "rotate-180")} />
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
-            <div className="quick-questions">
-              <h4 className="quick-questions-title">Quick Questions</h4>
-              {quickQuestions.map((question, index) => (
-                <button 
-                  key={index}
-                  className="quick-question-btn"
-                  onClick={() => handleQuickQuestion(question)}
-                  disabled={sendMessageMutation.isPending}
-                >
-                  {question}
-                </button>
-              ))}
-            </div>
+            {/* Cast */}
+            {cast.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Cast</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {cast.map((actor, index) => (
+                      <div key={index} className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+                          {actor.profile_path ? (
+                            <img
+                              src={actor.profile_path}
+                              alt={actor.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <User className="w-6 h-6 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="font-medium text-sm truncate">{actor.name}</h3>
+                          <p className="text-xs text-muted-foreground truncate">{actor.character}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-            <div className="actions-section">
-              <h4 className="actions-title">Actions</h4>
-              <button className="action-btn">
-                <Heart size={18} />
-                Add to Favorites
-              </button>
-              <button className="action-btn">
-                <Share2 size={18} />
-                Share Movie
-              </button>
-              
-              <div className="rate-movie">
-                <span className="rate-label">Rate this movie</span>
-                <div className="rating-stars">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="rate-star" size={20} />
+            {/* AI Analysis Sections */}
+            {sections.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                    AI-Generated Analysis
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {sections.map((section) => (
+                    <Card key={section.id} className="border-border">
+                      <button
+                        onClick={() => toggleSection(section.id)}
+                        className="w-full p-4 flex items-center justify-between hover:bg-accent transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <h3 className="font-semibold text-left">{section.section_type_display}</h3>
+                          <span className="text-xs text-muted-foreground">{section.word_count} words</span>
+                        </div>
+                        <ChevronDown
+                          className={cn(
+                            "w-5 h-5 transition-transform",
+                            expandedSections[section.id] && "rotate-180"
+                          )}
+                        />
+                      </button>
+                      {expandedSections[section.id] && (
+                        <div className="px-4 pb-4 space-y-3">
+                          <Separator />
+                          <p className="text-muted-foreground leading-relaxed">{section.content}</p>
+                          {section.key_topics && section.key_topics.length > 0 && (
+                            <div className="space-y-2 pt-2">
+                              <span className="text-sm font-medium">Key Topics:</span>
+                              <div className="flex flex-wrap gap-2">
+                                {section.key_topics.map((topic, index) => (
+                                  <span
+                                    key={index}
+                                    className="px-2 py-1 rounded-md bg-secondary text-secondary-foreground text-xs"
+                                  >
+                                    {topic}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </Card>
                   ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Similar Movies */}
+            {similarMovies.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Similar Movies</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    {similarMovies.map((similar) => (
+                      <Link
+                        key={similar.id}
+                        to={`/movies/${similar.id}`}
+                        className="group"
+                      >
+                        <Card className="overflow-hidden border-0 bg-card/50 hover:bg-card transition-all hover:scale-105">
+                          <div className="aspect-[2/3] relative overflow-hidden">
+                            <img
+                              src={similar.poster_url || 'https://via.placeholder.com/200x300?text=No+Poster'}
+                              alt={similar.title}
+                              className="object-cover w-full h-full"
+                            />
+                          </div>
+                          <CardContent className="p-2">
+                            <h3 className="font-medium text-xs line-clamp-2 group-hover:text-primary transition-colors">
+                              {similar.title}
+                            </h3>
+                            <p className="text-xs text-muted-foreground">{similar.year}</p>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Sidebar - Chat Widget */}
+          <div className="lg:col-span-2">
+            <div className="lg:sticky lg:top-6 space-y-4">
+              <Card className="flex flex-col h-[calc(100vh-8rem)]">
+                <CardHeader className="flex-shrink-0 border-b">
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                    Chat with AI
+                  </CardTitle>
+                  <CardDescription>
+                    Ask me anything about {movie.title}
+                  </CardDescription>
+                </CardHeader>
+
+                {/* Messages */}
+                <div
+                  ref={messagesContainerRef}
+                  className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent hover:scrollbar-thumb-primary/40"
+                >
+                  {messages.length === 0 && (
+                    <div className="flex flex-col items-center justify-center h-full text-center space-y-3">
+                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Sparkles className="w-6 h-6 text-primary" />
+                      </div>
+                      <p className="text-sm text-muted-foreground px-4">
+                        Ask me anything about this movie!
+                      </p>
+                    </div>
+                  )}
+
+                  {messages.map((msg, index) => (
+                    <div
+                      key={index}
+                      className={cn(
+                        "flex gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300",
+                        msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'
+                      )}
+                    >
+                      {msg.role === 'assistant' && (
+                        <div className="w-7 h-7 rounded-md bg-card border flex items-center justify-center flex-shrink-0">
+                          <Sparkles className="w-3.5 h-3.5 text-primary" />
+                        </div>
+                      )}
+                      <div
+                        className={cn(
+                          "flex flex-col gap-1",
+                          msg.role === 'user' ? 'items-end' : 'items-start',
+                          "max-w-[90%]"
+                        )}
+                      >
+                        <Card
+                          className={cn(
+                            "p-3",
+                            msg.role === 'user'
+                              ? 'bg-primary text-primary-foreground border-primary'
+                              : msg.isError
+                              ? 'bg-card border-destructive text-destructive'
+                              : 'bg-card border'
+                          )}
+                        >
+                          <div className="prose prose-sm dark:prose-invert max-w-none">
+                            <ReactMarkdown
+                              components={{
+                                p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                                ul: ({ children }) => <ul className="my-2 ml-4 list-disc">{children}</ul>,
+                                ol: ({ children }) => <ol className="my-2 ml-4 list-decimal">{children}</ol>,
+                                li: ({ children }) => <li className="my-1">{children}</li>,
+                                strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                              }}
+                            >
+                              {msg.role === 'assistant' && isTyping && index === messages.length - 1
+                                ? typingMessage
+                                : msg.content}
+                            </ReactMarkdown>
+                          </div>
+                        </Card>
+                      </div>
+                    </div>
+                  ))}
+
+                  {sendMessageMutation.isPending && (
+                    <div className="flex gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                      <div className="w-7 h-7 rounded-md bg-card border flex items-center justify-center flex-shrink-0">
+                        <Sparkles className="w-3.5 h-3.5 text-primary" />
+                      </div>
+                      <Card className="p-3 bg-card border">
+                        <div className="flex gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]"></span>
+                          <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]"></span>
+                          <span className="w-2 h-2 rounded-full bg-primary animate-bounce"></span>
+                        </div>
+                      </Card>
+                    </div>
+                  )}
                 </div>
-              </div>
+
+                {/* Input */}
+                <CardContent className="flex-shrink-0 border-t p-4">
+                  <form onSubmit={handleSendMessage} className="flex gap-2">
+                    <Input
+                      type="text"
+                      value={chatMessage}
+                      onChange={(e) => setChatMessage(e.target.value)}
+                      placeholder="Ask about this movie..."
+                      className="flex-1"
+                    />
+                    <Button
+                      type="submit"
+                      size="icon"
+                      disabled={!chatMessage.trim() || sendMessageMutation.isPending}
+                    >
+                      <Send className="w-4 h-4" />
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* Quick Questions - Below chat */}
+              <Card>
+                <CardContent className="p-4 space-y-3">
+                  <h4 className="text-sm font-medium">Quick Questions</h4>
+                  <div className="space-y-2">
+                    {quickQuestions.map((question, index) => (
+                      <Button
+                        key={index}
+                        variant="secondary"
+                        size="sm"
+                        className="w-full text-xs justify-start h-auto py-2"
+                        onClick={() => handleQuickQuestion(question)}
+                        disabled={sendMessageMutation.isPending}
+                      >
+                        {question}
+                      </Button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>

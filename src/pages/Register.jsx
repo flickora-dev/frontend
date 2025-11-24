@@ -1,10 +1,11 @@
-// frontend/src/pages/Register.jsx
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Film } from 'lucide-react';
+import { Film, Loader2 } from 'lucide-react';
 import useAuthStore from '../store/authStore';
-import LoadingSpinner from '../components/common/loadingSpinner';
-import '../styles/pages/Login.css';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -59,104 +60,120 @@ const Register = () => {
   };
 
   return (
-    <div className="login-page">
-      <div className="login-container">
-        <div className="login-header">
-          <div className="login-logo">
-            <div className="login-logo-icon">
-              <Film size={32} />
-            </div>
-            <h1 className="login-logo-text">flickora</h1>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <div className="w-full max-w-md space-y-6">
+        {/* Logo */}
+        <div className="flex items-center justify-center gap-3">
+          <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10">
+            <Film className="w-7 h-7 text-primary" />
           </div>
-          <h2 className="login-title">Create your account</h2>
-          <p className="login-subtitle">Join the AI-powered movie discovery platform</p>
+          <h1 className="text-3xl font-bold">flickora</h1>
         </div>
 
-        <div className="login-form-wrapper">
-          <form onSubmit={handleSubmit} className="login-form">
-            {(error || localError) && (
-              <div className="error-message">
-                {error || localError}
-              </div>
-            )}
-
-            <div className="form-group">
-              <label className="form-label">Username</label>
-              <input
-                type="text"
-                name="username"
-                value={formData.username}
-                onChange={handleChange}
-                className="form-input"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Email</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="form-input"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Password</label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className="form-input"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Confirm Password</label>
-              <input
-                type="password"
-                name="password2"
-                value={formData.password2}
-                onChange={handleChange}
-                className="form-input"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="form-submit"
-            >
-              {isLoading ? (
-                <>
-                  <LoadingSpinner size="sm" />
-                  Creating account...
-                </>
-              ) : (
-                'Create Account'
+        {/* Register Card */}
+        <Card className="border-border">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold">Create your account</CardTitle>
+            <CardDescription>
+              Join the AI-powered movie discovery platform
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {(error || localError) && (
+                <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+                  {error || localError}
+                </div>
               )}
-            </button>
-          </form>
 
-          <div className="login-footer">
-            <p className="login-footer-text">
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleChange}
+                  placeholder="Choose a username"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="Enter your email"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Create a password (min 8 characters)"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password2">Confirm Password</Label>
+                <Input
+                  id="password2"
+                  type="password"
+                  name="password2"
+                  value={formData.password2}
+                  onChange={handleChange}
+                  placeholder="Confirm your password"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating account...
+                  </>
+                ) : (
+                  'Create Account'
+                )}
+              </Button>
+            </form>
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4">
+            <div className="text-sm text-muted-foreground text-center">
               Already have an account?{' '}
-              <Link to="/login" className="login-link">
+              <Link to="/login" className="text-primary hover:underline font-medium">
                 Sign in
               </Link>
-            </p>
-          </div>
-        </div>
+            </div>
+          </CardFooter>
+        </Card>
 
-        <Link to="/" className="back-link">
-          ← Back to Home
-        </Link>
+        {/* Back Link */}
+        <div className="text-center">
+          <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
+            ← Back to Home
+          </Link>
+        </div>
       </div>
     </div>
   );

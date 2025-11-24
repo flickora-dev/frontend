@@ -1,3 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Ocean Blues Color Palette */
+    --background: 215 45% 6%;     /* #04080f - Deep navy */
+    --foreground: 210 17% 86%;    /* #dae3e5 - Mist blue */
+
+    --card: 213 40% 12%;          /* #0a1320 - Dark card bg */
+    --card-foreground: 210 17% 86%;
+
+    --popover: 213 40% 12%;
+    --popover-foreground: 210 17% 86%;
+
+    --primary: 210 56% 52%;       /* #507dbc - Ocean blue */
+    --primary-foreground: 210 17% 86%;
+
+    --secondary: 213 30% 18%;
+    --secondary-foreground: 210 17% 86%;
+
+    --muted: 213 40% 12%;
+    --muted-foreground: 210 27% 73%; /* #bbd1ea - Cloud blue */
+
+    --accent: 213 30% 18%;        /* Darker accent background */
+    --accent-foreground: 210 17% 86%; /* Light text for readability */
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 17% 86%;
+
+    --border: 213 30% 18%;
+    --input: 213 40% 12%;
+    --ring: 210 56% 52%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom Scrollbar Styles */
+@layer utilities {
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thumb-primary\/20::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary) / 0.2);
+    border-radius: 4px;
+  }
+
+  .scrollbar-track-transparent::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin:hover::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary) / 0.4);
+  }
+
+  /* Firefox */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary) / 0.2) transparent;
+  }
+}
+
 @import './styles/variables.css';
 @import './styles/reset.css';
 @import './styles/layout.css';
