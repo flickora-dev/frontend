@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 import { chatAPI } from '../api/chat';
 import { Send, Download, Trash2, RotateCw, MessageCircle, Sparkles } from 'lucide-react';
@@ -11,6 +11,7 @@ import { cn } from '../lib/utils';
 
 const Chat = () => {
   const location = useLocation();
+  const queryClient = useQueryClient();
   const [chatMessage, setChatMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const messagesContainerRef = useRef(null);
@@ -31,6 +32,10 @@ const Chat = () => {
         timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
       };
       setMessages(prev => [...prev, aiMessage]);
+
+      // Invalidate conversations query to update Recent Chats page
+      queryClient.invalidateQueries(['conversations']);
+      queryClient.invalidateQueries(['conversation', response.data.conversation_id]);
     },
     onError: (error) => {
       console.error('Chat error:', error);

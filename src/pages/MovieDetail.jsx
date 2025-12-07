@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { moviesAPI } from '../api';
 import { chatAPI } from '../api/chat';
 import { Star, ArrowLeft, ChevronDown, Film, Heart, Share2, Send, Sparkles, Loader2, User } from 'lucide-react';
@@ -13,6 +13,7 @@ import { cn } from '../lib/utils';
 
 const MovieDetail = () => {
   const { id } = useParams();
+  const queryClient = useQueryClient();
   const [expandedSections, setExpandedSections] = useState({});
   const [showFullSynopsis, setShowFullSynopsis] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
@@ -72,6 +73,10 @@ const MovieDetail = () => {
       };
       typeMessage(aiMessagecontent);
       setMessages(prev => [...prev, aiMessage]);
+
+      // Invalidate conversations query to update Recent Chats page
+      queryClient.invalidateQueries(['conversations']);
+      queryClient.invalidateQueries(['conversation', response.data.conversation_id]);
     },
     onError: (error) => {
       console.error('Chat error:', error);

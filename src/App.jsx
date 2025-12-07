@@ -9,6 +9,7 @@ import MovieDetail from './pages/MovieDetail';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Chat from './pages/Chat';
+import RecentChats from './pages/RecentChats';
 import './App.css';
 
 
@@ -33,7 +34,8 @@ function App() {
           <Route path="movies/:id" element={<MovieDetail />} />
           <Route path="trending" element={<div>Trending Page (TODO)</div>} />
           <Route path="favorites" element={<div>Favorites Page (TODO)</div>} />
-          <Route path="recent" element={<div>Recent Chats Page (TODO)</div>} />
+          <Route path="recent" element={<RecentChats />} />
+          <Route path="recent/:conversationId" element={<RecentChats />} />
           <Route path="chat" element={<Chat />} />
           <Route path="settings" element={<div>Settings Page (TODO)</div>} />
         </Route>

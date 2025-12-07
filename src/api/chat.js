@@ -13,4 +13,7 @@ export const chatAPI = {
 
   getConversation: (id) =>
     axios.get(`/chat/${id}/conversation_detail/`),
+
+  deleteConversation: (id) =>
+    axios.delete(`/chat/${id}/delete_conversation/`),
 };
