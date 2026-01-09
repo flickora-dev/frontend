@@ -12,7 +12,7 @@ const BottomNav = () => {
     { path: '/movies', icon: Film, label: 'Movies' },
     { path: '/chat', icon: MessageCircle, label: 'Chat' },
     { path: '/favorites', icon: Heart, label: 'Favorites' },
-    { path: '/settings', icon: User, label: 'Profile' },
+    { path: '/profile', icon: User, label: 'Profile' },
   ];
 
   return (

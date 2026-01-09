@@ -10,10 +10,12 @@ import { Input } from '../components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Separator } from '../components/ui/separator';
 import { cn } from '../lib/utils';
+import useAuthStore from '../store/authStore';
 
 const MovieDetail = () => {
   const { id } = useParams();
   const queryClient = useQueryClient();
+  const { isAuthenticated } = useAuthStore();
   const [expandedSections, setExpandedSections] = useState({});
   const [showFullSynopsis, setShowFullSynopsis] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
@@ -59,6 +61,46 @@ const MovieDetail = () => {
     queryFn: () => moviesAPI.getSimilarMovies(id),
     enabled: !!id
   });
+
+  // Check if movie is favorited
+  const { data: favoritedData } = useQuery({
+    queryKey: ['is-favorited', id],
+    queryFn: () => moviesAPI.isFavorited(id),
+    enabled: !!id && isAuthenticated
+  });
+
+  const isFavorited = favoritedData?.data?.is_favorited || false;
+
+  // Add to favorites mutation
+  const addFavoriteMutation = useMutation({
+    mutationFn: () => moviesAPI.addToFavorites(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['is-favorited', id]);
+      queryClient.invalidateQueries(['favorites']);
+    }
+  });
+
+  // Remove from favorites mutation
+  const removeFavoriteMutation = useMutation({
+    mutationFn: () => moviesAPI.removeFromFavorites(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['is-favorited', id]);
+      queryClient.invalidateQueries(['favorites']);
+    }
+  });
+
+  const handleFavoriteToggle = () => {
+    if (!isAuthenticated) {
+      alert('Please log in to add favorites');
+      return;
+    }
+
+    if (isFavorited) {
+      removeFavoriteMutation.mutate();
+    } else {
+      addFavoriteMutation.mutate();
+    }
+  };
 
   const sendMessageMutation = useMutation({
     mutationFn: (message) => chatAPI.sendMessage(message, id),
@@ -240,9 +282,18 @@ const MovieDetail = () => {
 
                     {/* Action Buttons */}
                     <div className="flex flex-wrap gap-2 pt-2">
-                      <Button variant="default" className="gap-2">
-                        <Heart className="w-4 h-4" />
-                        Add to Favorites
+                      <Button
+                        variant={isFavorited ? "default" : "outline"}
+                        className="gap-2"
+                        onClick={handleFavoriteToggle}
+                        disabled={addFavoriteMutation.isLoading || removeFavoriteMutation.isLoading}
+                      >
+                        {addFavoriteMutation.isLoading || removeFavoriteMutation.isLoading ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Heart className={cn("w-4 h-4", isFavorited && "fill-current")} />
+                        )}
+                        {isFavorited ? 'Remove from Favorites' : 'Add to Favorites'}
                       </Button>
                       <Button variant="outline" className="gap-2">
                         <Share2 className="w-4 h-4" />
