@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Film, Loader2 } from 'lucide-react';
+import { Film, Loader2, AlertCircle } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -14,17 +14,45 @@ const Login = () => {
     username: '',
     password: '',
   });
+  const [localError, setLocalError] = useState('');
 
+  // Sync error from store to local state
+  useEffect(() => {
+    if (error) {
+      setLocalError(error);
+    }
+  }, [error]);
+
+  // Clear errors when user starts typing
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    clearError();
+    if (localError) {
+      setLocalError('');
+      clearError();
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = await login(formData.username, formData.password);
-    if (result.success) {
-      navigate('/');
+    e.stopPropagation();
+    setLocalError(''); // Clear any previous errors
+
+    try {
+      const result = await login(formData.username, formData.password);
+      if (result.success) {
+        navigate('/');
+      } else {
+        // Error is already set in the store and will sync via useEffect
+        // Shake the card to draw attention to the error
+        const card = document.getElementById('login-card');
+        if (card) {
+          card.classList.add('shake');
+          setTimeout(() => card.classList.remove('shake'), 500);
+        }
+      }
+    } catch (err) {
+      console.error('Login submission error:', err);
+      setLocalError('An unexpected error occurred. Please try again.');
     }
   };
 
@@ -40,7 +68,7 @@ const Login = () => {
         </div>
 
         {/* Login Card */}
-        <Card className="border-border">
+        <Card id="login-card" className="border-border">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
             <CardDescription>
@@ -49,9 +77,13 @@ const Login = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-sm">
-                  {error}
+              {localError && (
+                <div className="p-3 rounded-md bg-destructive/10 border border-destructive text-destructive text-sm flex items-start gap-2 animate-in fade-in-50 slide-in-from-top-2">
+                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Login Failed</p>
+                    <p className="text-xs mt-1">{localError}</p>
+                  </div>
                 </div>
               )}
 

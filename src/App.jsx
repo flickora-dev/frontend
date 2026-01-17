@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import useAuthStore from './store/authStore';
+import InstallPWA from './components/pwa/InstallPWA';
 
 // Pages (będziemy tworzyć w następnym kroku)
 import Home from './pages/Home';
@@ -26,6 +27,7 @@ const ProtectedRoute = ({ children }) => {
 function App() {
   return (
     <BrowserRouter>
+      <InstallPWA />
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<Login />} />

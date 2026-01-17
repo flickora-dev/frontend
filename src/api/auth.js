@@ -16,6 +16,9 @@ export const authAPI = {
   updateProfile: (data) =>
     axios.put('/auth/profile/update/', data),
 
+  deleteAccount: () =>
+    axios.delete('/auth/account/delete/'),
+
   refreshToken: (refreshToken) =>
     axios.post('/auth/token/refresh/', { refresh: refreshToken }),
 };

@@ -28,12 +28,20 @@ const useAuthStore = create(
             user,
             isAuthenticated: true,
             isLoading: false,
+            error: null,
           });
 
           return { success: true };
         } catch (error) {
+          console.error('Login error details:', error);
+          console.error('Response:', error.response);
           const errorMessage = error.response?.data?.error || 'Login failed';
-          set({ error: errorMessage, isLoading: false });
+          set({
+            error: errorMessage,
+            isLoading: false,
+            isAuthenticated: false,
+            user: null
+          });
           return { success: false, error: errorMessage };
         }
       },
@@ -58,14 +66,18 @@ const useAuthStore = create(
             user,
             isAuthenticated: true,
             isLoading: false,
+            error: null,
           });
 
           return { success: true };
         } catch (error) {
+          console.error('Registration error details:', error);
+          console.error('Response:', error.response);
+
           // Extract error message from response
           const errorData = error.response?.data;
           let errorMessage = 'Registration failed';
-          
+
           if (errorData) {
             // Check for field-specific errors
             if (errorData.username && Array.isArray(errorData.username)) {
@@ -86,8 +98,13 @@ const useAuthStore = create(
               errorMessage = errorData.detail;
             }
           }
-          
-          set({ error: errorMessage, isLoading: false });
+
+          set({
+            error: errorMessage,
+            isLoading: false,
+            isAuthenticated: false,
+            user: null
+          });
           return { success: false, error: errorMessage };
         }
       },

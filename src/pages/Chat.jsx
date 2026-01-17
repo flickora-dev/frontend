@@ -16,10 +16,25 @@ const Chat = () => {
   const [messages, setMessages] = useState([]);
   const messagesContainerRef = useRef(null);
 
-  const quickSuggestions = [
+  const [quickSuggestions, setQuickSuggestions] = useState([
     "Recommend a thriller",
     "Explain Inception",
     "Best 2023 movies"
+  ]);
+
+  const allSuggestions = [
+    "Recommend a thriller",
+    "Explain Inception",
+    "Best 2023 movies",
+    "Best sci-fi movies",
+    "Movies like Interstellar",
+    "Top rated comedies",
+    "Classic horror films",
+    "Movies with plot twist",
+    "Best actor performances",
+    "Hidden gem movies",
+    "Animated masterpieces",
+    "Documentary recommendations"
   ];
 
   const sendMessageMutation = useMutation({
@@ -111,22 +126,28 @@ const Chat = () => {
     a.click();
   };
 
+  const handleRefreshSuggestions = () => {
+    // Shuffle and pick 3 random suggestions
+    const shuffled = [...allSuggestions].sort(() => Math.random() - 0.5);
+    setQuickSuggestions(shuffled.slice(0, 3));
+  };
+
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] md:h-[calc(100vh-4rem)]">
-      <div className="flex flex-col h-full max-w-5xl mx-auto w-full">
+    <div className="flex flex-col h-[calc(100vh-4rem-4rem)] md:h-[calc(100vh-4rem)] max-h-screen overflow-hidden">
+      <div className="flex flex-col h-full max-w-5xl mx-auto w-full overflow-hidden">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 p-4 md:p-6 border-b bg-background/95 backdrop-blur">
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <MessageCircle className="w-6 h-6 text-primary" />
-              Global Movie Chat
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Ask anything about movies, get instant AI responses
-            </p>
+        <div className="flex justify-between items-center gap-2 p-3 md:p-4 border-b bg-background/95 backdrop-blur">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <MessageCircle className="w-5 h-5 md:w-6 md:h-6 text-primary flex-shrink-0" />
+            <div className="min-w-0">
+              <h1 className="text-lg md:text-2xl font-bold truncate">Global Movie Chat</h1>
+              <p className="text-xs md:text-sm text-muted-foreground hidden md:block">
+                Ask anything about movies, get instant AI responses
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-center gap-2 text-sm text-green-500 font-medium">
+          <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0">
+            <div className="hidden md:flex items-center gap-2 text-sm text-green-500 font-medium">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
@@ -138,7 +159,7 @@ const Chat = () => {
               size="sm"
               onClick={handleExportChat}
               disabled={messages.length === 0}
-              className="gap-2"
+              className="gap-2 h-8 md:h-9"
             >
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Export</span>
@@ -148,7 +169,7 @@ const Chat = () => {
               size="sm"
               onClick={handleClearHistory}
               disabled={messages.length === 0}
-              className="gap-2"
+              className="gap-2 h-8 md:h-9"
             >
               <Trash2 className="w-4 h-4" />
               <span className="hidden sm:inline">Clear</span>
@@ -241,29 +262,33 @@ const Chat = () => {
         </div>
 
         {/* Footer */}
-        <div className="flex-shrink-0 p-4 md:p-6 border-t bg-background/95 backdrop-blur space-y-3">
-          <div className="flex gap-2 flex-wrap">
-            {quickSuggestions.map((suggestion, index) => (
+        <div className="flex-shrink-0 p-3 md:p-6 border-t bg-background/95 backdrop-blur space-y-2 md:space-y-3">
+          {messages.length === 0 && (
+            <div className="flex gap-2 flex-wrap">
+              {quickSuggestions.map((suggestion, index) => (
+                <Button
+                  key={index}
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleQuickSuggestion(suggestion)}
+                  disabled={sendMessageMutation.isPending}
+                  className="text-xs"
+                >
+                  {suggestion}
+                </Button>
+              ))}
               <Button
-                key={index}
                 variant="secondary"
                 size="sm"
-                onClick={() => handleQuickSuggestion(suggestion)}
+                onClick={handleRefreshSuggestions}
                 disabled={sendMessageMutation.isPending}
-                className="text-xs"
+                className="px-2"
+                title="Refresh suggestions"
               >
-                {suggestion}
+                <RotateCw className="w-4 h-4" />
               </Button>
-            ))}
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={sendMessageMutation.isPending}
-              className="px-2"
-            >
-              <RotateCw className="w-4 h-4" />
-            </Button>
-          </div>
+            </div>
+          )}
 
           <form onSubmit={handleSendMessage} className="flex gap-2">
             <Input

@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Film, Loader2 } from 'lucide-react';
+import { Film, Loader2, AlertCircle } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -18,44 +18,82 @@ const Register = () => {
   });
   const [localError, setLocalError] = useState('');
 
+  // Sync error from store to local state
+  useEffect(() => {
+    if (error) {
+      setLocalError(error);
+    }
+  }, [error]);
+
+  // Clear errors when user starts typing
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    clearError();
-    setLocalError('');
+    if (localError) {
+      setLocalError('');
+      clearError();
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    clearError();
-    setLocalError('');
-    
+    e.stopPropagation();
+    setLocalError(''); // Clear any previous errors
+
     // Validate required fields
     if (!formData.username || !formData.email || !formData.password || !formData.password2) {
       setLocalError("All fields are required.");
+      const card = document.getElementById('register-card');
+      if (card) {
+        card.classList.add('shake');
+        setTimeout(() => card.classList.remove('shake'), 500);
+      }
       return;
     }
 
     // Validate passwords match before submitting
     if (formData.password !== formData.password2) {
       setLocalError("Passwords don't match.");
+      const card = document.getElementById('register-card');
+      if (card) {
+        card.classList.add('shake');
+        setTimeout(() => card.classList.remove('shake'), 500);
+      }
       return;
     }
 
     // Validate password length
     if (formData.password.length < 8) {
       setLocalError("Password must be at least 8 characters long.");
+      const card = document.getElementById('register-card');
+      if (card) {
+        card.classList.add('shake');
+        setTimeout(() => card.classList.remove('shake'), 500);
+      }
       return;
     }
 
-    const result = await register(
-      formData.username,
-      formData.email,
-      formData.password,
-      formData.password2
-    );
-    
-    if (result.success) {
-      navigate('/');
+    try {
+      const result = await register(
+        formData.username,
+        formData.email,
+        formData.password,
+        formData.password2
+      );
+
+      if (result.success) {
+        navigate('/');
+      } else {
+        // Error is already set in the store and will sync via useEffect
+        // Shake the card to draw attention to the error
+        const card = document.getElementById('register-card');
+        if (card) {
+          card.classList.add('shake');
+          setTimeout(() => card.classList.remove('shake'), 500);
+        }
+      }
+    } catch (err) {
+      console.error('Registration submission error:', err);
+      setLocalError('An unexpected error occurred. Please try again.');
     }
   };
 
@@ -71,7 +109,7 @@ const Register = () => {
         </div>
 
         {/* Register Card */}
-        <Card className="border-border">
+        <Card id="register-card" className="border-border">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold">Create your account</CardTitle>
             <CardDescription>
@@ -80,9 +118,13 @@ const Register = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              {(error || localError) && (
-                <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-sm">
-                  {error || localError}
+              {localError && (
+                <div className="p-3 rounded-md bg-destructive/10 border border-destructive text-destructive text-sm flex items-start gap-2 animate-in fade-in-50 slide-in-from-top-2">
+                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Registration Failed</p>
+                    <p className="text-xs mt-1">{localError}</p>
+                  </div>
                 </div>
               )}
 
