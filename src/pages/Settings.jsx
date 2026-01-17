@@ -20,6 +20,27 @@ const Settings = () => {
   // PWA Install state
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [canShowPrompt, setCanShowPrompt] = useState(false);
+
+  // Detect user's platform
+  const getPlatform = () => {
+    const userAgent = navigator.userAgent || window.opera;
+
+    // iOS detection
+    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+      return 'ios';
+    }
+
+    // Android detection
+    if (/android/i.test(userAgent)) {
+      return 'android';
+    }
+
+    // Desktop detection
+    return 'desktop';
+  };
+
+  const platform = getPlatform();
 
   useEffect(() => {
     // Check if app is running in standalone mode (PWA installed and launched)
@@ -43,25 +64,24 @@ const Settings = () => {
     if (checkIfRunningAsStandalone()) {
       console.log('PWA: Running in standalone mode');
       setIsInstalled(true);
+      // Mark as installed in localStorage when running in standalone
+      localStorage.setItem('pwa-was-installed', 'true');
       return;
     }
 
     // If not running standalone, the app is opened in browser
     console.log('PWA: Running in browser mode');
 
-    // Check localStorage for previous installation
-    const wasInstalled = localStorage.getItem('pwa-installed') === 'true';
-    if (wasInstalled) {
-      console.log('PWA: Previously installed (from localStorage)');
-      setIsInstalled(true);
-      return;
-    }
-
-    // Listen for the beforeinstallprompt event
+    // Listen for the beforeinstallprompt event (Chrome/Edge on Android/Desktop)
     const handleBeforeInstallPrompt = (e) => {
       console.log('beforeinstallprompt event fired');
       e.preventDefault();
       setDeferredPrompt(e);
+      setCanShowPrompt(true);
+
+      // If we're getting install prompt, app is NOT installed yet
+      // Clear the localStorage flag if it exists
+      localStorage.removeItem('pwa-was-installed');
     };
 
     // Listen for successful installation
@@ -69,8 +89,7 @@ const Settings = () => {
       console.log('appinstalled event fired');
       setIsInstalled(true);
       setDeferredPrompt(null);
-      // Store installation state
-      localStorage.setItem('pwa-installed', 'true');
+      localStorage.setItem('pwa-was-installed', 'true');
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -319,8 +338,11 @@ const Settings = () => {
                 <p className="text-sm text-muted-foreground">
                   Flickora jest już zainstalowana na Twoim urządzeniu
                 </p>
+                <p className="text-xs text-muted-foreground mt-3">
+                  Uruchom aplikację z ekranu głównego, aby korzystać w trybie standalone
+                </p>
               </div>
-            ) : deferredPrompt ? (
+            ) : canShowPrompt && deferredPrompt ? (
               <div className="space-y-4">
                 <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg p-4 border border-purple-500/20">
                   <div className="flex gap-3">
@@ -354,31 +376,151 @@ const Settings = () => {
                 </div>
               </div>
             ) : (
-              <div className="text-center py-4">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-500/10 mb-3">
-                  <Download className="w-8 h-8 text-blue-500" />
-                </div>
-                <p className="font-medium mb-1">Instalacja dostępna przez przeglądarkę</p>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Użyj wbudowanej funkcji przeglądarki aby zainstalować aplikację
-                </p>
-                <div className="space-y-2 text-sm text-muted-foreground bg-muted/50 rounded-lg p-4 text-left">
-                  <p className="font-medium text-foreground mb-2">Instrukcje instalacji:</p>
-                  <div className="space-y-2">
-                    <div>
-                      <p className="font-medium text-foreground">Chrome/Edge (Desktop):</p>
-                      <p className="text-xs">Kliknij ikonę instalacji w pasku adresu lub Menu (⋮) → "Zainstaluj Flickora"</p>
+              <div className="py-4">
+                {/* If no install prompt available and iOS, show instructions */}
+                {platform === 'ios' ? (
+                  <>
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-500/10 mb-3 mx-auto">
+                      <Download className="w-8 h-8 text-blue-500" />
                     </div>
-                    <div>
-                      <p className="font-medium text-foreground">Safari (iOS):</p>
-                      <p className="text-xs">Przycisk Udostępnij → "Dodaj do ekranu początkowego"</p>
+                    <p className="font-medium mb-1 text-center">Jak zainstalować Flickora?</p>
+                    <p className="text-sm text-muted-foreground mb-4 text-center">
+                      Postępuj zgodnie z instrukcją poniżej
+                    </p>
+                  </>
+                ) : (
+                  <div className="text-center">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/10 mb-3">
+                      <Download className="w-8 h-8 text-green-500" />
                     </div>
-                    <div>
-                      <p className="font-medium text-foreground">Chrome (Android):</p>
-                      <p className="text-xs">Menu (⋮) → "Dodaj do ekranu głównego" lub "Zainstaluj aplikację"</p>
+                    <p className="font-medium mb-2 text-green-500">Najprawdopodobniej aplikacja jest już zainstalowana!</p>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Jeśli nie widzisz ikony aplikacji na ekranie głównym, sprawdź poniższe instrukcje
+                    </p>
+                  </div>
+                )}
+
+                {/* iOS - Safari ONLY */}
+                {platform === 'ios' && (
+                  <div className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/20">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-2xl">📱</span>
+                      <h3 className="font-semibold text-blue-400 text-lg">iPhone / iPad</h3>
+                    </div>
+
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 mb-4">
+                      <p className="text-sm text-amber-400 font-medium flex items-center gap-2">
+                        <span>⚠️</span>
+                        <span>WAŻNE: Musisz używać przeglądarki Safari!</span>
+                      </p>
+                      <p className="text-xs text-amber-300 mt-2">
+                        Chrome, Firefox i inne przeglądarki na iOS NIE MOGĄ instalować aplikacji PWA ze względu na ograniczenia Apple.
+                      </p>
+                    </div>
+
+                    <div className="bg-muted/50 rounded-lg p-4">
+                      <p className="font-medium mb-3 text-sm">Instrukcja krok po kroku:</p>
+                      <ol className="space-y-3 text-sm ml-1">
+                        <li className="flex gap-3">
+                          <span className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                          <span>Otwórz tę stronę w przeglądarce <strong>Safari</strong> (jeśli jesteś w Chrome/Firefox - skopiuj adres URL i wklej w Safari)</span>
+                        </li>
+                        <li className="flex gap-3">
+                          <span className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                          <span>Kliknij przycisk <strong>"Udostępnij"</strong> (kwadrat ze strzałką w górę) na dolnym pasku</span>
+                        </li>
+                        <li className="flex gap-3">
+                          <span className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                          <span>Przewiń w dół i wybierz <strong>"Dodaj do ekranu początkowego"</strong></span>
+                        </li>
+                        <li className="flex gap-3">
+                          <span className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">4</span>
+                          <span>Kliknij <strong>"Dodaj"</strong> w prawym górnym rogu</span>
+                        </li>
+                        <li className="flex gap-3">
+                          <span className="flex-shrink-0 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs">✓</span>
+                          <span className="font-medium text-green-500">Gotowe! Aplikacja pojawi się na ekranie głównym 🎉</span>
+                        </li>
+                      </ol>
                     </div>
                   </div>
-                </div>
+                )}
+
+                {/* Android */}
+                {platform === 'android' && (
+                  <div className="bg-green-500/10 rounded-lg p-4 border border-green-500/20">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-2xl">🤖</span>
+                      <h3 className="font-semibold text-green-400 text-lg">Android</h3>
+                    </div>
+
+                    <div className="bg-muted/50 rounded-lg p-4">
+                      <p className="font-medium mb-3 text-sm">Instrukcja krok po kroku:</p>
+                      <ol className="space-y-3 text-sm ml-1">
+                        <li className="flex gap-3">
+                          <span className="flex-shrink-0 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                          <span>Kliknij menu <strong>⋮</strong> (trzy kropki) w prawym górnym rogu przeglądarki</span>
+                        </li>
+                        <li className="flex gap-3">
+                          <span className="flex-shrink-0 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                          <span>Wybierz <strong>"Dodaj do ekranu głównego"</strong> lub <strong>"Zainstaluj aplikację"</strong></span>
+                        </li>
+                        <li className="flex gap-3">
+                          <span className="flex-shrink-0 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                          <span>Kliknij <strong>"Dodaj"</strong> lub <strong>"Zainstaluj"</strong> w oknie potwierdzenia</span>
+                        </li>
+                        <li className="flex gap-3">
+                          <span className="flex-shrink-0 w-6 h-6 bg-green-500 text-white rounded-full flex items-center justify-center text-xs">✓</span>
+                          <span className="font-medium text-green-500">Gotowe! Aplikacja pojawi się na ekranie głównym 🎉</span>
+                        </li>
+                      </ol>
+                    </div>
+
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mt-4">
+                      <p className="text-xs text-blue-300">
+                        <strong>Wskazówka:</strong> Jeśli nie widzisz opcji instalacji, odśwież stronę i spróbuj ponownie.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Desktop */}
+                {platform === 'desktop' && (
+                  <div className="bg-purple-500/10 rounded-lg p-4 border border-purple-500/20">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-2xl">💻</span>
+                      <h3 className="font-semibold text-purple-400 text-lg">Komputer</h3>
+                    </div>
+
+                    <div className="bg-muted/50 rounded-lg p-4">
+                      <p className="font-medium mb-3 text-sm">Instrukcja krok po kroku:</p>
+                      <ol className="space-y-3 text-sm ml-1">
+                        <li className="flex gap-3">
+                          <span className="flex-shrink-0 w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                          <span>Szukaj ikony instalacji <strong>⊕</strong> lub <strong>↓</strong> w pasku adresu (po prawej stronie)</span>
+                        </li>
+                        <li className="flex gap-3">
+                          <span className="flex-shrink-0 w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                          <span>Kliknij ikonę i wybierz <strong>"Zainstaluj"</strong> lub <strong>"Zainstaluj Flickora"</strong></span>
+                        </li>
+                        <li className="flex gap-3">
+                          <span className="flex-shrink-0 w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs">✓</span>
+                          <span className="font-medium text-purple-400">Gotowe! Aplikacja zostanie zainstalowana 🎉</span>
+                        </li>
+                      </ol>
+                    </div>
+
+                    <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mt-4">
+                      <p className="text-xs text-blue-300 mb-2">
+                        <strong>Alternatywnie:</strong>
+                      </p>
+                      <ul className="text-xs text-blue-200 space-y-1 ml-4">
+                        <li>• <strong>Chrome:</strong> Menu (⋮) → "Zainstaluj Flickora"</li>
+                        <li>• <strong>Edge:</strong> Menu (⋯) → "Aplikacje" → "Zainstaluj tę witrynę jako aplikację"</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

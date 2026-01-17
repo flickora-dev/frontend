@@ -11,6 +11,26 @@ const InstallButton = ({ variant = 'default', size = 'default', className = '' }
   const [isStandalone, setIsStandalone] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
 
+  // Detect user's platform
+  const getPlatform = () => {
+    const userAgent = navigator.userAgent || window.opera;
+
+    // iOS detection
+    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+      return 'ios';
+    }
+
+    // Android detection
+    if (/android/i.test(userAgent)) {
+      return 'android';
+    }
+
+    // Desktop detection
+    return 'desktop';
+  };
+
+  const platform = getPlatform();
+
   useEffect(() => {
     // Check if running as standalone PWA
     const standalone = window.matchMedia('(display-mode: standalone)').matches ||
@@ -72,7 +92,7 @@ const InstallButton = ({ variant = 'default', size = 'default', className = '' }
           onClick={() => setShowInstructions(false)}
         >
           <div
-            className="bg-slate-900 rounded-lg p-6 max-w-md w-full"
+            className="bg-slate-900 rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 mb-4">
@@ -82,34 +102,98 @@ const InstallButton = ({ variant = 'default', size = 'default', className = '' }
               <h3 className="text-xl font-bold text-white">Jak zainstalować?</h3>
             </div>
 
-            <div className="space-y-4 text-sm text-slate-300">
-              <div>
-                <p className="font-semibold text-white mb-2">📱 iPhone/iPad (Safari):</p>
-                <ol className="list-decimal ml-5 space-y-1">
-                  <li>Kliknij przycisk <strong>Udostępnij</strong> (kwadrat ze strzałką w górę)</li>
-                  <li>Przewiń w dół i wybierz <strong>"Dodaj do ekranu początkowego"</strong></li>
-                  <li>Kliknij <strong>"Dodaj"</strong></li>
+            {/* iOS Instructions */}
+            {platform === 'ios' && (
+              <div className="space-y-3">
+                <div className="bg-amber-500/20 border border-amber-500/40 rounded-lg p-3">
+                  <p className="text-sm text-amber-300 font-medium flex items-center gap-2">
+                    <span>⚠️</span>
+                    <span>WAŻNE: Musisz używać Safari!</span>
+                  </p>
+                  <p className="text-xs text-amber-200 mt-1">
+                    Chrome i Firefox na iOS nie mogą instalować PWA
+                  </p>
+                </div>
+
+                <div className="bg-slate-800 rounded-lg p-4">
+                  <p className="font-semibold text-white mb-3 flex items-center gap-2">
+                    <span>📱</span>
+                    <span>Instrukcja dla iPhone/iPad:</span>
+                  </p>
+                  <ol className="space-y-2 text-sm text-slate-300">
+                    <li className="flex gap-2">
+                      <span className="flex-shrink-0 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                      <span>Otwórz w <strong className="text-white">Safari</strong></span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="flex-shrink-0 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                      <span>Kliknij <strong className="text-white">Udostępnij</strong> (kwadrat ze strzałką w górę na dolnym pasku)</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="flex-shrink-0 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                      <span>Przewiń i wybierz <strong className="text-white">"Dodaj do ekranu początkowego"</strong></span>
+                    </li>
+                    <li className="flex gap-2">
+                      <span className="flex-shrink-0 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">4</span>
+                      <span>Kliknij <strong className="text-white">"Dodaj"</strong></span>
+                    </li>
+                  </ol>
+                </div>
+              </div>
+            )}
+
+            {/* Android Instructions */}
+            {platform === 'android' && (
+              <div className="bg-slate-800 rounded-lg p-4">
+                <p className="font-semibold text-white mb-3 flex items-center gap-2">
+                  <span>🤖</span>
+                  <span>Instrukcja dla Android:</span>
+                </p>
+                <ol className="space-y-2 text-sm text-slate-300">
+                  <li className="flex gap-2">
+                    <span className="flex-shrink-0 w-5 h-5 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                    <span>Kliknij menu <strong className="text-white">⋮</strong> (trzy kropki)</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="flex-shrink-0 w-5 h-5 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                    <span>Wybierz <strong className="text-white">"Dodaj do ekranu głównego"</strong> lub <strong className="text-white">"Zainstaluj"</strong></span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="flex-shrink-0 w-5 h-5 bg-green-500 text-white rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                    <span>Potwierdź klikając <strong className="text-white">"Dodaj"</strong></span>
+                  </li>
                 </ol>
               </div>
+            )}
 
-              <div>
-                <p className="font-semibold text-white mb-2">🤖 Android (Chrome):</p>
-                <ol className="list-decimal ml-5 space-y-1">
-                  <li>Kliknij menu <strong>⋮</strong> (trzy kropki w prawym górnym rogu)</li>
-                  <li>Wybierz <strong>"Dodaj do ekranu głównego"</strong> lub <strong>"Zainstaluj aplikację"</strong></li>
-                  <li>Kliknij <strong>"Dodaj"</strong> lub <strong>"Zainstaluj"</strong></li>
+            {/* Desktop Instructions */}
+            {platform === 'desktop' && (
+              <div className="bg-slate-800 rounded-lg p-4">
+                <p className="font-semibold text-white mb-3 flex items-center gap-2">
+                  <span>💻</span>
+                  <span>Instrukcja dla komputera:</span>
+                </p>
+                <ol className="space-y-2 text-sm text-slate-300">
+                  <li className="flex gap-2">
+                    <span className="flex-shrink-0 w-5 h-5 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                    <span>Szukaj ikony <strong className="text-white">⊕</strong> lub <strong className="text-white">↓</strong> w pasku adresu</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="flex-shrink-0 w-5 h-5 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                    <span>Kliknij i wybierz <strong className="text-white">"Zainstaluj Flickora"</strong></span>
+                  </li>
                 </ol>
+                <div className="mt-3 pt-3 border-t border-slate-700">
+                  <p className="text-xs text-slate-400">
+                    <strong className="text-slate-300">Lub:</strong> Menu przeglądarki → "Zainstaluj Flickora"
+                  </p>
+                </div>
               </div>
-
-              <div>
-                <p className="font-semibold text-white mb-2">💻 Desktop (Chrome/Edge):</p>
-                <p>Szukaj ikony instalacji w pasku adresu lub w menu przeglądarki</p>
-              </div>
-            </div>
+            )}
 
             <Button
               onClick={() => setShowInstructions(false)}
-              className="w-full mt-6"
+              className="w-full mt-4"
             >
               Rozumiem
             </Button>

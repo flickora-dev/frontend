@@ -69,7 +69,7 @@ export default defineConfig({
             }
           },
           {
-            urlPattern: /^http:\/\/localhost:8000\/api\/.*/i,
+            urlPattern: /^https?:\/\/(localhost:8000|backend.*\.up\.railway\.app)\/api\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'backend-api-cache',
