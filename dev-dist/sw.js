@@ -82,7 +82,7 @@ define(['./workbox-21a80088'], (function (workbox) { 'use strict';
     "revision": "3ca0b8505b4bec776b69afdba2768812"
   }, {
     "url": "index.html",
-    "revision": "0.2ap3bvioil"
+    "revision": "0.vo19tb27ks"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("index.html"), {
@@ -106,7 +106,7 @@ define(['./workbox-21a80088'], (function (workbox) { 'use strict';
       statuses: [0, 200]
     })]
   }), 'GET');
-  workbox.registerRoute(/^http:\/\/localhost:8000\/api\/.*/i, new workbox.NetworkFirst({
+  workbox.registerRoute(/^https?:\/\/(localhost:8000|backend.*\.up\.railway\.app)\/api\/.*/i, new workbox.NetworkFirst({
     "cacheName": "backend-api-cache",
     "networkTimeoutSeconds": 10,
     plugins: [new workbox.ExpirationPlugin({

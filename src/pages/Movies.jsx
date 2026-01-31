@@ -1,22 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { moviesAPI } from '../api';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { Search, Filter, Loader2, Star, X } from 'lucide-react';
+import { Search, Loader2, Star, X, ChevronLeft, ChevronRight, SlidersHorizontal } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
+import MultiSelect from '../components/ui/MultiSelect';
+import FilterModal from '../components/ui/FilterModal';
+import { cn } from '../lib/utils';
 
 const Movies = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // State from URL params
+  // State from URL params - now supporting multiple values
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
-  const [selectedGenre, setSelectedGenre] = useState(searchParams.get('genre') || '');
-  const [selectedYear, setSelectedYear] = useState(searchParams.get('year') || '');
+  const [selectedGenres, setSelectedGenres] = useState(
+    searchParams.get('genres')?.split(',').filter(Boolean) || []
+  );
+  const [yearFrom, setYearFrom] = useState(searchParams.get('year_from') || '');
+  const [yearTo, setYearTo] = useState(searchParams.get('year_to') || '');
   const [sortBy, setSortBy] = useState(searchParams.get('ordering') || '-year');
-  const [showFilters, setShowFilters] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page')) || 1);
 
   // Fetch genres
   const { data: genresData } = useQuery({
@@ -24,32 +31,41 @@ const Movies = () => {
     queryFn: moviesAPI.getGenres
   });
 
-  // Fetch movies with filters
+  // Fetch movies with filters and pagination
   const { data: moviesData, isLoading, isError } = useQuery({
-    queryKey: ['movies', searchQuery, selectedGenre, selectedYear, sortBy],
+    queryKey: ['movies', searchQuery, selectedGenres, yearFrom, yearTo, sortBy, currentPage],
     queryFn: () => {
       const params = {
         ordering: sortBy,
+        page: currentPage,
       };
 
       if (searchQuery) params.search = searchQuery;
-      if (selectedGenre) params.genres__tmdb_id = selectedGenre;
-      if (selectedYear) params.year = selectedYear;
+      if (selectedGenres.length > 0) params.genres__tmdb_id__in = selectedGenres.join(',');
+      if (yearFrom) params.year_from = yearFrom;
+      if (yearTo) params.year_to = yearTo;
 
       return moviesAPI.getMovies(params);
     }
   });
 
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedGenres, yearFrom, yearTo, sortBy]);
+
   // Update URL params when filters change
   useEffect(() => {
     const params = {};
     if (searchQuery) params.search = searchQuery;
-    if (selectedGenre) params.genre = selectedGenre;
-    if (selectedYear) params.year = selectedYear;
+    if (selectedGenres.length > 0) params.genres = selectedGenres.join(',');
+    if (yearFrom) params.year_from = yearFrom;
+    if (yearTo) params.year_to = yearTo;
     if (sortBy !== '-year') params.ordering = sortBy;
+    if (currentPage > 1) params.page = currentPage;
 
     setSearchParams(params);
-  }, [searchQuery, selectedGenre, selectedYear, sortBy, setSearchParams]);
+  }, [searchQuery, selectedGenres, yearFrom, yearTo, sortBy, currentPage, setSearchParams]);
 
   const genres = Array.isArray(genresData?.data?.results)
     ? genresData.data.results
@@ -63,19 +79,74 @@ const Movies = () => {
     ? moviesData.data
     : [];
 
-  // Generate year options (current year down to 1900)
+  // Pagination info from API response
+  const totalCount = moviesData?.data?.count || movies.length;
+  const pageSize = 20;
+  const totalPages = Math.ceil(totalCount / pageSize);
+  const hasNextPage = !!moviesData?.data?.next;
+  const hasPrevPage = !!moviesData?.data?.previous;
+
+  // Current year for validation
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: currentYear - 1899 }, (_, i) => currentYear - i);
+
+  // Prepare options for MultiSelect components
+  const genreOptions = useMemo(() =>
+    genres.map((genre) => ({
+      value: String(genre.tmdb_id),
+      label: genre.name,
+      count: genre.movie_count,
+    })),
+    [genres]
+  );
+
+  const sortOptions = [
+    { value: '-year', label: 'Newest First' },
+    { value: 'year', label: 'Oldest First' },
+    { value: '-imdb_rating', label: 'Highest Rated' },
+    { value: 'imdb_rating', label: 'Lowest Rated' },
+    { value: 'title', label: 'Title A-Z' },
+    { value: '-title', label: 'Title Z-A' },
+  ];
 
   const handleClearFilters = () => {
     setSearchQuery('');
-    setSelectedGenre('');
-    setSelectedYear('');
+    setSelectedGenres([]);
+    setYearFrom('');
+    setYearTo('');
     setSortBy('-year');
+    setCurrentPage(1);
     setSearchParams({});
   };
 
-  const hasActiveFilters = searchQuery || selectedGenre || selectedYear || sortBy !== '-year';
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const toggleGenre = (genreId) => {
+    setSelectedGenres(prev =>
+      prev.includes(genreId)
+        ? prev.filter(id => id !== genreId)
+        : [...prev, genreId]
+    );
+  };
+
+  const removeGenre = (genreId) => {
+    setSelectedGenres(prev => prev.filter(id => id !== genreId));
+  };
+
+  const clearYearRange = () => {
+    setYearFrom('');
+    setYearTo('');
+  };
+
+  const hasActiveFilters = searchQuery || selectedGenres.length > 0 || yearFrom || yearTo || sortBy !== '-year';
+
+  // Get genre name by ID
+  const getGenreName = (genreId) => {
+    const genre = genres.find(g => String(g.tmdb_id) === genreId);
+    return genre?.name || genreId;
+  };
 
   if (isError) {
     return (
@@ -110,88 +181,97 @@ const Movies = () => {
             />
           </div>
 
-          {/* Filter Toggle Button */}
+          {/* Results count and filter toggle */}
           <div className="flex items-center gap-4 flex-wrap">
             <Button
-              variant={showFilters ? "default" : "outline"}
-              onClick={() => setShowFilters(!showFilters)}
+              variant="outline"
+              onClick={() => setIsFilterModalOpen(true)}
               className="gap-2"
             >
-              <Filter className="w-4 h-4" />
-              {showFilters ? 'Hide Filters' : 'Show Filters'}
+              <SlidersHorizontal className="w-4 h-4" />
+              Filters
+              {(selectedGenres.length > 0 || yearFrom || yearTo) && (
+                <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
+                  {selectedGenres.length + (yearFrom || yearTo ? 1 : 0)}
+                </span>
+              )}
             </Button>
 
-            {hasActiveFilters && (
-              <Button
-                variant="ghost"
-                onClick={handleClearFilters}
-                className="gap-2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="w-4 h-4" />
-                Clear All Filters
-              </Button>
-            )}
-
-            <span className="text-sm text-muted-foreground ml-auto">
-              {movies.length} {movies.length === 1 ? 'movie' : 'movies'} found
+            <span className="text-sm text-muted-foreground">
+              {totalCount} {totalCount === 1 ? 'movie' : 'movies'} found
             </span>
+
+            {/* Sort By - always visible */}
+            <div className="ml-auto">
+              <MultiSelect
+                options={sortOptions}
+                value={sortBy}
+                onChange={setSortBy}
+                placeholder="Sort by"
+                multiple={false}
+              />
+            </div>
           </div>
 
-          {/* Filters Panel */}
-          {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-card rounded-lg border">
-              {/* Genre Filter */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Genre</label>
-                <select
-                  value={selectedGenre}
-                  onChange={(e) => setSelectedGenre(e.target.value)}
-                  className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          {/* Active Filters Tags */}
+          {hasActiveFilters && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {selectedGenres.map(genreId => (
+                <span
+                  key={genreId}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-medium"
                 >
-                  <option value="">All Genres</option>
-                  {genres.map((genre) => (
-                    <option key={genre.tmdb_id} value={genre.tmdb_id}>
-                      {genre.name} ({genre.movie_count})
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  {getGenreName(genreId)}
+                  <button
+                    onClick={() => removeGenre(genreId)}
+                    className="hover:bg-primary-foreground/20 rounded-full p-0.5 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </span>
+              ))}
 
-              {/* Year Filter */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Year</label>
-                <select
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(e.target.value)}
-                  className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="">All Years</option>
-                  {years.map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {(yearFrom || yearTo) && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-sm font-medium">
+                  {yearFrom && yearTo
+                    ? `${yearFrom} - ${yearTo}`
+                    : yearFrom
+                    ? `From ${yearFrom}`
+                    : `To ${yearTo}`}
+                  <button
+                    onClick={clearYearRange}
+                    className="hover:bg-primary-foreground/20 rounded-full p-0.5 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </span>
+              )}
 
-              {/* Sort By */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Sort By</label>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="-year">Newest First</option>
-                  <option value="year">Oldest First</option>
-                  <option value="-imdb_rating">Highest Rated</option>
-                  <option value="imdb_rating">Lowest Rated</option>
-                  <option value="title">Title A-Z</option>
-                  <option value="-title">Title Z-A</option>
-                </select>
-              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearFilters}
+                className="text-muted-foreground hover:text-foreground h-8"
+              >
+                Clear all
+              </Button>
             </div>
           )}
+
+          {/* Filter Modal */}
+          <FilterModal
+            isOpen={isFilterModalOpen}
+            onClose={() => setIsFilterModalOpen(false)}
+            genres={genres}
+            selectedGenres={selectedGenres}
+            onToggleGenre={toggleGenre}
+            yearFrom={yearFrom}
+            yearTo={yearTo}
+            onYearFromChange={setYearFrom}
+            onYearToChange={setYearTo}
+            onClearAll={handleClearFilters}
+            onApply={() => setIsFilterModalOpen(false)}
+          />
         </div>
       </div>
 
@@ -211,42 +291,119 @@ const Movies = () => {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {movies.map((movie) => (
-              <Link
-                key={movie.id}
-                to={`/movies/${movie.id}`}
-                className="group flex"
-              >
-                <Card className="overflow-hidden border-0 bg-card/50 hover:bg-card transition-all hover:scale-105 flex flex-col w-full h-full">
-                  <div className="aspect-[2/3] relative overflow-hidden">
-                    <img
-                      src={movie.poster_url || 'https://via.placeholder.com/300x450?text=No+Poster'}
-                      alt={movie.title}
-                      className="object-cover w-full h-full"
-                      loading="lazy"
-                    />
-                    {movie.imdb_rating && (
-                      <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-md bg-black/70 backdrop-blur-sm text-xs font-medium">
-                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                        <span>{movie.imdb_rating}</span>
-                      </div>
-                    )}
-                    {movie.year && (
-                      <div className="absolute bottom-2 left-2 px-2 py-1 rounded-md bg-black/70 backdrop-blur-sm text-xs font-medium">
-                        {movie.year}
-                      </div>
-                    )}
-                  </div>
-                  <CardContent className="p-3 min-h-[3rem] flex items-start">
-                    <h3 className="font-medium text-sm line-clamp-2 group-hover:text-primary transition-colors w-full">
-                      {movie.title}
-                    </h3>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {movies.map((movie) => (
+                <Link
+                  key={movie.id}
+                  to={`/movies/${movie.id}`}
+                  className="group flex"
+                >
+                  <Card className="overflow-hidden border-0 bg-card/50 hover:bg-card transition-all hover:scale-105 flex flex-col w-full h-full">
+                    <div className="aspect-[2/3] relative overflow-hidden">
+                      <img
+                        src={movie.poster_url || 'https://via.placeholder.com/300x450?text=No+Poster'}
+                        alt={movie.title}
+                        className="object-cover w-full h-full"
+                        loading="lazy"
+                      />
+                      {movie.imdb_rating && (
+                        <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-md bg-black/70 backdrop-blur-sm text-xs font-medium">
+                          <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                          <span>{movie.imdb_rating}</span>
+                        </div>
+                      )}
+                      {movie.year && (
+                        <div className="absolute bottom-2 left-2 px-2 py-1 rounded-md bg-black/70 backdrop-blur-sm text-xs font-medium">
+                          {movie.year}
+                        </div>
+                      )}
+                    </div>
+                    <CardContent className="p-3 min-h-[3rem] flex items-start">
+                      <h3 className="font-medium text-sm line-clamp-2 group-hover:text-primary transition-colors w-full">
+                        {movie.title}
+                      </h3>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-8 pb-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={!hasPrevPage}
+                  className="gap-1"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Previous
+                </Button>
+
+                <div className="flex items-center gap-1">
+                  {/* First page */}
+                  {currentPage > 3 && (
+                    <>
+                      <Button
+                        variant={currentPage === 1 ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageChange(1)}
+                        className="w-9 h-9 p-0"
+                      >
+                        1
+                      </Button>
+                      {currentPage > 4 && <span className="px-2 text-muted-foreground">...</span>}
+                    </>
+                  )}
+
+                  {/* Pages around current */}
+                  {Array.from({ length: 5 }, (_, i) => currentPage - 2 + i)
+                    .filter(page => page >= 1 && page <= totalPages)
+                    .map(page => (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageChange(page)}
+                        className="w-9 h-9 p-0"
+                      >
+                        {page}
+                      </Button>
+                    ))
+                  }
+
+                  {/* Last page */}
+                  {currentPage < totalPages - 2 && (
+                    <>
+                      {currentPage < totalPages - 3 && <span className="px-2 text-muted-foreground">...</span>}
+                      <Button
+                        variant={currentPage === totalPages ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageChange(totalPages)}
+                        className="w-9 h-9 p-0"
+                      >
+                        {totalPages}
+                      </Button>
+                    </>
+                  )}
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={!hasNextPage}
+                  className="gap-1"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

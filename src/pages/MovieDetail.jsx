@@ -22,6 +22,7 @@ const MovieDetail = () => {
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const [typingMessage, setTypingMessage] = useState('');
+  const conversationIdRef = useRef(null);
   const messagesContainerRef  = useRef(null);
 
 
@@ -103,8 +104,13 @@ const MovieDetail = () => {
   };
 
   const sendMessageMutation = useMutation({
-    mutationFn: (message) => chatAPI.sendMessage(message, id),
+    mutationFn: (message) => chatAPI.sendMessage(message, id, conversationIdRef.current),
     onSuccess: (response) => {
+      // Save conversation_id for subsequent messages
+      if (response.data.conversation_id) {
+        conversationIdRef.current = response.data.conversation_id;
+      }
+
       setIsTyping(true);
       setTypingMessage('');
       const aiMessagecontent = response.data.message;
@@ -117,8 +123,8 @@ const MovieDetail = () => {
       setMessages(prev => [...prev, aiMessage]);
 
       // Invalidate conversations query to update Recent Chats page
-      queryClient.invalidateQueries(['conversations']);
-      queryClient.invalidateQueries(['conversation', response.data.conversation_id]);
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['conversation', response.data.conversation_id] });
     },
     onError: (error) => {
       console.error('Chat error:', error);
@@ -177,6 +183,11 @@ const MovieDetail = () => {
     scrollToBottom();
   } , [messages, sendMessageMutation.isPending]);
 
+  // Reset conversation when movie changes
+  useEffect(() => {
+    setMessages([]);
+    conversationIdRef.current = null;
+  }, [id]);
 
   if (movieLoading) {
     return (

@@ -14,6 +14,8 @@ const Chat = () => {
   const queryClient = useQueryClient();
   const [chatMessage, setChatMessage] = useState('');
   const [messages, setMessages] = useState([]);
+  const [conversationId, setConversationId] = useState(null);
+  const conversationIdRef = useRef(null);
   const messagesContainerRef = useRef(null);
 
   const [quickSuggestions, setQuickSuggestions] = useState([
@@ -38,8 +40,14 @@ const Chat = () => {
   ];
 
   const sendMessageMutation = useMutation({
-    mutationFn: (message) => chatAPI.sendMessage(message, null),
+    mutationFn: (message) => chatAPI.sendMessage(message, null, conversationIdRef.current),
     onSuccess: (response) => {
+      // Save conversation_id for subsequent messages
+      if (response.data.conversation_id) {
+        conversationIdRef.current = response.data.conversation_id;
+        setConversationId(response.data.conversation_id);
+      }
+
       const aiMessage = {
         role: 'assistant',
         content: response.data.message,
@@ -49,8 +57,8 @@ const Chat = () => {
       setMessages(prev => [...prev, aiMessage]);
 
       // Invalidate conversations query to update Recent Chats page
-      queryClient.invalidateQueries(['conversations']);
-      queryClient.invalidateQueries(['conversation', response.data.conversation_id]);
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['conversation', response.data.conversation_id] });
     },
     onError: (error) => {
       console.error('Chat error:', error);
@@ -114,6 +122,8 @@ const Chat = () => {
 
   const handleClearHistory = () => {
     setMessages([]);
+    setConversationId(null);
+    conversationIdRef.current = null;
   };
 
   const handleExportChat = () => {

@@ -11,7 +11,28 @@ import { cn } from '../../lib/utils';
 const ConversationView = ({ conversation }) => {
   const queryClient = useQueryClient();
   const [newMessage, setNewMessage] = useState('');
+  const [localMessages, setLocalMessages] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const [typingMessage, setTypingMessage] = useState('');
+  const [typingMessageId, setTypingMessageId] = useState(null);
   const messagesContainerRef = useRef(null);
+
+  // Sync local messages with conversation messages
+  useEffect(() => {
+    setLocalMessages(conversation.messages || []);
+  }, [conversation.id, conversation.messages]);
+
+  // Typing effect function
+  const typeMessage = (message, messageId, index = 0) => {
+    if (index < message.length) {
+      setTypingMessage(prev => prev + message.charAt(index));
+      setTimeout(() => typeMessage(message, messageId, index + 1), 15);
+    } else {
+      setIsTyping(false);
+      setTypingMessage('');
+      setTypingMessageId(null);
+    }
+  };
 
   // Send message mutation
   const sendMessageMutation = useMutation({
@@ -21,50 +42,47 @@ const ConversationView = ({ conversation }) => {
         conversation.conversation_type === 'movie' ? conversation.movie?.id : null,
         conversation.id
       ),
-    onMutate: async (newMessage) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries(['conversation', conversation.id]);
-
-      // Snapshot the previous value
-      const previousConversation = queryClient.getQueryData(['conversation', conversation.id]);
-
-      // Optimistically update to show user message immediately
-      queryClient.setQueryData(['conversation', conversation.id], (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          data: {
-            ...old.data,
-            messages: [
-              ...old.data.messages,
-              {
-                id: Date.now(),
-                role: 'user',
-                content: newMessage,
-                created_at: new Date().toISOString(),
-                context_sections: []
-              }
-            ]
-          }
-        };
-      });
-
-      // Clear input immediately
+    onMutate: async (messageText) => {
+      // Add user message immediately to local state
+      const userMessage = {
+        id: Date.now(),
+        role: 'user',
+        content: messageText,
+        created_at: new Date().toISOString(),
+      };
+      setLocalMessages(prev => [...prev, userMessage]);
       setNewMessage('');
-
-      // Return context for rollback on error
-      return { previousConversation };
     },
-    onError: (err, newMessage, context) => {
-      // Rollback on error
-      queryClient.setQueryData(['conversation', conversation.id], context.previousConversation);
-    },
-    onSuccess: async () => {
-      // Refetch to get the actual AI response with all messages
-      await queryClient.refetchQueries(['conversation', conversation.id]);
+    onSuccess: (response) => {
+      // Add AI message with typing effect
+      const aiMessage = {
+        id: Date.now() + 1,
+        role: 'assistant',
+        content: response.data.message,
+        created_at: new Date().toISOString(),
+      };
 
-      // Invalidate conversations list to update recent chats
-      queryClient.invalidateQueries(['conversations']);
+      setLocalMessages(prev => [...prev, aiMessage]);
+      setTypingMessageId(aiMessage.id);
+      setIsTyping(true);
+      setTypingMessage('');
+      typeMessage(response.data.message, aiMessage.id);
+
+      // Invalidate and refetch queries to sync with backend
+      queryClient.invalidateQueries({ queryKey: ['conversation', conversation.id] });
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.refetchQueries({ queryKey: ['conversations'] });
+    },
+    onError: (error) => {
+      console.error('Chat error:', error);
+      const errorMessage = {
+        id: Date.now() + 1,
+        role: 'assistant',
+        content: 'Sorry, I encountered an error. Please try again.',
+        created_at: new Date().toISOString(),
+        isError: true,
+      };
+      setLocalMessages(prev => [...prev, errorMessage]);
     },
   });
 
@@ -77,7 +95,7 @@ const ConversationView = ({ conversation }) => {
 
   useEffect(() => {
     scrollToBottom();
-  }, [conversation.messages, sendMessageMutation.isPending]);
+  }, [localMessages, sendMessageMutation.isPending, typingMessage]);
 
   // Handle send message
   const handleSendMessage = (e) => {
@@ -90,7 +108,7 @@ const ConversationView = ({ conversation }) => {
 
   // Export conversation
   const handleExportConversation = () => {
-    const chatText = conversation.messages
+    const chatText = localMessages
       .map(m => `[${new Date(m.created_at).toLocaleString()}] ${m.role}: ${m.content}`)
       .join('\n\n');
 
@@ -138,7 +156,7 @@ const ConversationView = ({ conversation }) => {
                 year: 'numeric',
               })}
               <span>•</span>
-              <span>{conversation.messages?.length || 0} messages</span>
+              <span>{localMessages.length || 0} messages</span>
             </div>
           </div>
           <Button
@@ -156,9 +174,9 @@ const ConversationView = ({ conversation }) => {
       {/* Messages */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4"
+        className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 custom-scrollbar"
       >
-        {conversation.messages?.map((msg, index) => (
+        {localMessages.map((msg, index) => (
           <div
             key={msg.id || index}
             className={cn(
@@ -183,6 +201,8 @@ const ConversationView = ({ conversation }) => {
                   "p-3 md:p-4",
                   msg.role === 'user'
                     ? 'bg-primary text-primary-foreground border-primary'
+                    : msg.isError
+                    ? 'bg-card border-destructive text-destructive'
                     : 'bg-card border'
                 )}
               >
@@ -196,7 +216,9 @@ const ConversationView = ({ conversation }) => {
                       strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
                     }}
                   >
-                    {msg.content}
+                    {msg.role === 'assistant' && isTyping && msg.id === typingMessageId
+                      ? typingMessage
+                      : msg.content}
                   </ReactMarkdown>
                 </div>
               </Card>
@@ -207,7 +229,7 @@ const ConversationView = ({ conversation }) => {
           </div>
         ))}
 
-        {sendMessageMutation.isPending && (
+        {sendMessageMutation.isPending && !isTyping && (
           <div className="flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
             <div className="w-8 h-8 rounded-md bg-card border flex items-center justify-center flex-shrink-0">
               <Sparkles className="w-4 h-4 text-primary" />
@@ -231,12 +253,12 @@ const ConversationView = ({ conversation }) => {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Continue the conversation..."
-            disabled={sendMessageMutation.isPending}
+            disabled={sendMessageMutation.isPending || isTyping}
             className="flex-1"
           />
           <Button
             type="submit"
-            disabled={!newMessage.trim() || sendMessageMutation.isPending}
+            disabled={!newMessage.trim() || sendMessageMutation.isPending || isTyping}
             className="gap-2"
           >
             <Send className="w-4 h-4" />

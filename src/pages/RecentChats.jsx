@@ -14,9 +14,11 @@ const RecentChats = () => {
   const [selectedConversation, setSelectedConversation] = useState(null);
 
   // Fetch conversations
-  const { data: conversations, isLoading } = useQuery({
+  const { data: conversations, isLoading, refetch: refetchConversations } = useQuery({
     queryKey: ['conversations'],
     queryFn: () => chatAPI.getConversations(),
+    staleTime: 0, // Always consider data stale
+    refetchOnWindowFocus: true,
   });
 
   // Fetch conversation details when selected
@@ -24,17 +26,21 @@ const RecentChats = () => {
     queryKey: ['conversation', selectedConversation],
     queryFn: () => chatAPI.getConversation(selectedConversation),
     enabled: !!selectedConversation,
-    onSuccess: () => {
-      // Invalidate conversations list to update unread badges
-      queryClient.invalidateQueries(['conversations']);
-    },
+    staleTime: 0,
   });
+
+  // Refetch conversations when conversation details change (after sending message)
+  useEffect(() => {
+    if (conversationDetails) {
+      refetchConversations();
+    }
+  }, [conversationDetails, refetchConversations]);
 
   // Delete conversation mutation
   const deleteConversationMutation = useMutation({
     mutationFn: (id) => chatAPI.deleteConversation(id),
     onSuccess: () => {
-      queryClient.invalidateQueries(['conversations']);
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
       if (selectedConversation) {
         setSelectedConversation(null);
         navigate('/recent');
