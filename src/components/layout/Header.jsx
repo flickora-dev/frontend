@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Search, Moon, Bell, LogOut, User, Film, Home, TrendingUp, Heart, Clock, MessageCircle, Settings } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Search, Bell, LogOut, User, Film, TrendingUp, Heart, Clock, MessageCircle, Settings, Check } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -21,12 +22,24 @@ import {
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
 
+const languageOptions = [
+  { value: 'en', label: 'English', flag: '🇬🇧' },
+  { value: 'pl', label: 'Polski', flag: '🇵🇱' },
+];
+
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t, i18n } = useTranslation();
   const { user, isAuthenticated, logout } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  const currentLang = languageOptions.find(l => l.value === i18n.language) || languageOptions[0];
+
+  const changeLanguage = (lng) => {
+    i18n.changeLanguage(lng);
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -46,15 +59,15 @@ const Header = () => {
 
   // Public navigation items (always visible)
   const publicNavItems = [
-    { path: '/movies', icon: Film, label: 'Browse Movies' },
-    { path: '/trending', icon: TrendingUp, label: 'Trending' },
+    { path: '/movies', icon: Film, label: t('nav.movies') },
+    { path: '/trending', icon: TrendingUp, label: t('nav.trending') },
   ];
 
   // Authenticated navigation items (only when logged in)
   const authNavItems = [
-    { path: '/favorites', icon: Heart, label: 'Favorites' },
-    { path: '/recent', icon: Clock, label: 'Recent Chats' },
-    { path: '/chat', icon: MessageCircle, label: 'Global Chat' },
+    { path: '/favorites', icon: Heart, label: t('nav.favorites') },
+    { path: '/recent', icon: Clock, label: t('nav.recentChats') },
+    { path: '/chat', icon: MessageCircle, label: t('nav.chat') },
   ];
 
   const allNavItems = isAuthenticated
@@ -98,6 +111,33 @@ const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
+            {/* Language Selector */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="w-auto px-2 gap-1">
+                  <span className="text-base">{currentLang.flag}</span>
+                  <span className="hidden sm:inline text-xs font-medium">{currentLang.value.toUpperCase()}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuLabel>{t('settings.language')}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {languageOptions.map((lang) => (
+                  <DropdownMenuItem
+                    key={lang.value}
+                    onClick={() => changeLanguage(lang.value)}
+                    className="flex items-center justify-between"
+                  >
+                    <span className="flex items-center gap-2">
+                      <span>{lang.flag}</span>
+                      <span>{lang.label}</span>
+                    </span>
+                    {i18n.language === lang.value && <Check className="h-4 w-4 text-primary" />}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {/* Search Button */}
             <Button
               variant="ghost"
@@ -158,16 +198,16 @@ const Header = () => {
                     </div>
                     <DropdownMenuItem onClick={() => navigate('/profile')}>
                       <User className="mr-2 h-4 w-4" />
-                      Profile
+                      {t('nav.profile')}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate('/settings')} className="lg:hidden">
                       <Settings className="mr-2 h-4 w-4" />
-                      Settings
+                      {t('nav.settings')}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
                       <LogOut className="mr-2 h-4 w-4" />
-                      Logout
+                      {t('nav.logout')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -179,12 +219,12 @@ const Header = () => {
                   onClick={() => navigate('/login')}
                   className="hidden sm:inline-flex"
                 >
-                  Login
+                  {t('nav.login')}
                 </Button>
                 <Button
                   onClick={() => navigate('/register')}
                 >
-                  Sign Up
+                  {t('auth.signUp')}
                 </Button>
               </>
             )}
@@ -196,7 +236,7 @@ const Header = () => {
       <Dialog open={isSearchOpen} onOpenChange={setIsSearchOpen}>
         <DialogContent className="sm:max-w-[500px] top-[20%] translate-y-0">
           <DialogHeader>
-            <DialogTitle>Search Movies</DialogTitle>
+            <DialogTitle>{t('common.search')} {t('nav.movies')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSearch} className="space-y-4">
             <div className="relative">
@@ -205,13 +245,13 @@ const Header = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for movies..."
+                placeholder={t('movies.searchPlaceholder')}
                 className="pl-10"
                 autoFocus
               />
             </div>
             <Button type="submit" className="w-full">
-              Search
+              {t('common.search')}
             </Button>
           </form>
         </DialogContent>

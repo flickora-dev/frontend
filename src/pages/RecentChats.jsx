@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { chatAPI } from '../api/chat';
 import { MessageCircle, Film, ChevronLeft, MessagesSquare } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -11,6 +12,7 @@ const RecentChats = () => {
   const { conversationId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const [selectedConversation, setSelectedConversation] = useState(null);
 
   // Fetch conversations
@@ -63,7 +65,7 @@ const RecentChats = () => {
 
   // Clear all conversations
   const handleClearAll = () => {
-    if (window.confirm('Are you sure you want to delete all conversations?')) {
+    if (window.confirm(t('recentChats.confirmDeleteAll'))) {
       conversations?.data?.forEach(conv => {
         deleteConversationMutation.mutate(conv.id);
       });
@@ -78,14 +80,13 @@ const RecentChats = () => {
 
     if (diffInHours < 1) {
       const minutes = Math.floor(diffInHours * 60);
-      return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+      return t('recentChats.timeAgo.minute', { count: minutes });
     } else if (diffInHours < 24) {
       const hours = Math.floor(diffInHours);
-      return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
-    } else if (diffInHours < 48) {
-      return '1 day ago';
+      return t('recentChats.timeAgo.hour', { count: hours });
     } else if (diffInHours < 168) {
-      return `${Math.floor(diffInHours / 24)} days ago`;
+      const days = Math.floor(diffInHours / 24);
+      return t('recentChats.timeAgo.day', { count: days });
     } else {
       return date.toLocaleDateString();
     }
@@ -94,7 +95,7 @@ const RecentChats = () => {
   // Get conversation preview text
   const getPreviewText = (conv) => {
     const lastMessage = conv.messages?.[conv.messages.length - 1];
-    return lastMessage?.content?.substring(0, 60) + '...' || 'No messages yet';
+    return lastMessage?.content?.substring(0, 60) + '...' || t('recentChats.noMessagesYet');
   };
 
   // Get conversation title
@@ -103,10 +104,10 @@ const RecentChats = () => {
       return conv.movie_title;
     }
     if (conv.conversation_type === 'global') {
-      return 'General Chat';
+      return t('recentChats.generalChat');
     }
     const firstMessage = conv.messages?.[0];
-    return firstMessage?.content?.substring(0, 30) || 'New Chat';
+    return firstMessage?.content?.substring(0, 30) || t('recentChats.newChat');
   };
 
   // Get movie poster URL - now from serializer
@@ -126,7 +127,7 @@ const RecentChats = () => {
         {/* Sidebar Header */}
         <div className="flex-shrink-0 p-6 border-b border-border/50">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-2xl font-bold">Recent Conversations</h2>
+            <h2 className="text-2xl font-bold">{t('recentChats.title')}</h2>
             <Button
               variant="link"
               size="sm"
@@ -134,7 +135,7 @@ const RecentChats = () => {
               disabled={!conversations?.data?.length}
               className="text-blue-500 hover:text-blue-600 text-sm font-normal"
             >
-              Clear All
+              {t('recentChats.clearAll')}
             </Button>
           </div>
         </div>
@@ -145,7 +146,7 @@ const RecentChats = () => {
             <div className="flex items-center justify-center h-full">
               <div className="flex flex-col items-center gap-2">
                 <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                <p className="text-sm text-muted-foreground">Loading conversations...</p>
+                <p className="text-sm text-muted-foreground">{t('recentChats.loading')}</p>
               </div>
             </div>
           ) : conversations?.data?.length === 0 ? (
@@ -153,12 +154,12 @@ const RecentChats = () => {
               <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
                 <MessageCircle className="w-8 h-8 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold mb-2">No conversations yet</h3>
+              <h3 className="text-lg font-semibold mb-2">{t('recentChats.noConversationsYet')}</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Start chatting to see your conversation history here
+                {t('recentChats.startChattingHistory')}
               </p>
               <Button onClick={() => navigate('/chat')}>
-                Start New Chat
+                {t('recentChats.startNewChat')}
               </Button>
             </div>
           ) : (
@@ -250,7 +251,7 @@ const RecentChats = () => {
                 }}
               >
                 <ChevronLeft className="w-4 h-4 mr-1" />
-                Back
+                {t('common.back')}
               </Button>
             </div>
 
@@ -259,7 +260,7 @@ const RecentChats = () => {
               <div className="flex items-center justify-center h-full">
                 <div className="flex flex-col items-center gap-2">
                   <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  <p className="text-sm text-muted-foreground">Loading conversation...</p>
+                  <p className="text-sm text-muted-foreground">{t('recentChats.loadingConversation')}</p>
                 </div>
               </div>
             ) : conversationDetails?.data ? (
@@ -277,9 +278,9 @@ const RecentChats = () => {
             </div>
 
             {/* Text */}
-            <h2 className="text-2xl font-bold mb-2">Select a conversation</h2>
+            <h2 className="text-2xl font-bold mb-2">{t('recentChats.selectConversation')}</h2>
             <p className="text-muted-foreground/70 max-w-sm">
-              Choose a chat from the left to continue
+              {t('recentChats.chooseChat')}
             </p>
           </div>
         )}

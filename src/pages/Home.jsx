@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { moviesAPI } from '../api';
 import { Search, MessageCircle, Star, Loader2, Sparkles } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
@@ -8,6 +9,7 @@ import { Separator } from '../components/ui/separator';
 
 const Home = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const { data: trendingData, isLoading: trendingLoading } = useQuery({
     queryKey: ['trending'],
@@ -66,13 +68,13 @@ const Home = () => {
         <div className="max-w-4xl mx-auto text-center space-y-6">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-sm text-primary mb-4">
             <Sparkles className="w-4 h-4" />
-            AI-Powered Movie Discovery
+            {t('home.aiPoweredDiscovery')}
           </div>
           <h1 className="text-5xl md:text-6xl font-bold tracking-tight">
-            Welcome to <span className="text-primary">flickora</span>
+            {t('home.welcomeTo')} <span className="text-primary">flickora</span>
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Discover your next favorite movie with AI-powered recommendations and insights
+            {t('home.discoverNextFavorite')}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
@@ -82,7 +84,7 @@ const Home = () => {
               className="gap-2"
             >
               <Search className="w-5 h-5" />
-              Search Movies
+              {t('home.searchMovies')}
             </Button>
             <Button
               size="lg"
@@ -91,7 +93,7 @@ const Home = () => {
               className="gap-2"
             >
               <MessageCircle className="w-5 h-5" />
-              Start Chatting
+              {t('home.startChatting')}
             </Button>
           </div>
         </div>
@@ -101,7 +103,7 @@ const Home = () => {
         {/* Popular Questions */}
         <section className="space-y-6">
           <div className="flex items-center gap-3">
-            <h2 className="text-3xl font-bold">Popular Questions</h2>
+            <h2 className="text-3xl font-bold">{t('home.popularQuestions')}</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -119,7 +121,7 @@ const Home = () => {
                 <CardContent className="pt-0">
                   <Button variant="secondary" size="sm" className="w-full gap-2 bg-primary/10 hover:bg-primary/20 text-primary">
                     <MessageCircle className="w-4 h-4" />
-                    Ask AI
+                    {t('home.askAI')}
                   </Button>
                 </CardContent>
               </Card>
@@ -132,7 +134,7 @@ const Home = () => {
         {/* Trending Movies */}
         <section className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-3xl font-bold">Trending This Week</h2>
+            <h2 className="text-3xl font-bold">{t('home.trendingThisWeek')}</h2>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -172,7 +174,7 @@ const Home = () => {
         {/* Top Rated Movies */}
         <section className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-3xl font-bold">Top Rated</h2>
+            <h2 className="text-3xl font-bold">{t('home.topRated')}</h2>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">

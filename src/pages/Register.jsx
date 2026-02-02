@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Film, Loader2, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import useAuthStore from '../store/authStore';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -10,6 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 const Register = () => {
   const navigate = useNavigate();
   const { register, isLoading, error, clearError } = useAuthStore();
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -41,7 +43,7 @@ const Register = () => {
 
     // Validate required fields
     if (!formData.username || !formData.email || !formData.password || !formData.password2) {
-      setLocalError("All fields are required.");
+      setLocalError(t('auth.allFieldsRequired'));
       const card = document.getElementById('register-card');
       if (card) {
         card.classList.add('shake');
@@ -52,7 +54,7 @@ const Register = () => {
 
     // Validate passwords match before submitting
     if (formData.password !== formData.password2) {
-      setLocalError("Passwords don't match.");
+      setLocalError(t('auth.passwordsDontMatch'));
       const card = document.getElementById('register-card');
       if (card) {
         card.classList.add('shake');
@@ -63,7 +65,7 @@ const Register = () => {
 
     // Validate password length
     if (formData.password.length < 8) {
-      setLocalError("Password must be at least 8 characters long.");
+      setLocalError(t('auth.passwordMinLength'));
       const card = document.getElementById('register-card');
       if (card) {
         card.classList.add('shake');
@@ -93,7 +95,7 @@ const Register = () => {
       }
     } catch (err) {
       console.error('Registration submission error:', err);
-      setLocalError('An unexpected error occurred. Please try again.');
+      setLocalError(t('auth.unexpectedError'));
     }
   };
 
@@ -111,9 +113,9 @@ const Register = () => {
         {/* Register Card */}
         <Card id="register-card" className="border-border">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold">Create your account</CardTitle>
+            <CardTitle className="text-2xl font-bold">{t('auth.createYourAccount')}</CardTitle>
             <CardDescription>
-              Join the AI-powered movie discovery platform
+              {t('auth.joinPlatform')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -122,63 +124,63 @@ const Register = () => {
                 <div className="p-3 rounded-md bg-destructive/10 border border-destructive text-destructive text-sm flex items-start gap-2 animate-in fade-in-50 slide-in-from-top-2">
                   <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="font-medium">Registration Failed</p>
+                    <p className="font-medium">{t('auth.registrationFailed')}</p>
                     <p className="text-xs mt-1">{localError}</p>
                   </div>
                 </div>
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username">{t('auth.username')}</Label>
                 <Input
                   id="username"
                   type="text"
                   name="username"
                   value={formData.username}
                   onChange={handleChange}
-                  placeholder="Choose a username"
+                  placeholder={t('auth.chooseUsername')}
                   required
                   disabled={isLoading}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('auth.email')}</Label>
                 <Input
                   id="email"
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="Enter your email"
+                  placeholder={t('auth.enterYourEmail')}
                   required
                   disabled={isLoading}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('auth.password')}</Label>
                 <Input
                   id="password"
                   type="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="Create a password (min 8 characters)"
+                  placeholder={t('auth.createPassword')}
                   required
                   disabled={isLoading}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password2">Confirm Password</Label>
+                <Label htmlFor="password2">{t('auth.confirmPassword')}</Label>
                 <Input
                   id="password2"
                   type="password"
                   name="password2"
                   value={formData.password2}
                   onChange={handleChange}
-                  placeholder="Confirm your password"
+                  placeholder={t('auth.confirmYourPassword')}
                   required
                   disabled={isLoading}
                 />
@@ -192,19 +194,19 @@ const Register = () => {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating account...
+                    {t('auth.creatingAccount')}
                   </>
                 ) : (
-                  'Create Account'
+                  t('auth.createAccount')
                 )}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-sm text-muted-foreground text-center">
-              Already have an account?{' '}
+              {t('auth.alreadyHaveAccount')}{' '}
               <Link to="/login" className="text-primary hover:underline font-medium">
-                Sign in
+                {t('auth.signIn')}
               </Link>
             </div>
           </CardFooter>
@@ -213,7 +215,7 @@ const Register = () => {
         {/* Back Link */}
         <div className="text-center">
           <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
-            ← Back to Home
+            ← {t('auth.backToHome')}
           </Link>
         </div>
       </div>

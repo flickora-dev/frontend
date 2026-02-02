@@ -1,20 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings as SettingsIcon, Moon, Sun, Bell, Globe, Volume2, Eye, Download, Smartphone } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Settings as SettingsIcon, Moon, Sun, Bell, Volume2, Eye, Download, Smartphone, Monitor } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Separator } from '../components/ui/separator';
 import { cn } from '../lib/utils';
 import useAuthStore from '../store/authStore';
+import useThemeStore from '../store/themeStore';
 
 const Settings = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
+  const { theme, setTheme } = useThemeStore();
+  const { t } = useTranslation();
 
   // Settings state (would be stored in localStorage or backend in production)
-  const [theme, setTheme] = useState('dark');
   const [notifications, setNotifications] = useState(true);
-  const [language, setLanguage] = useState('en');
   const [autoplay, setAutoplay] = useState(true);
 
   // PWA Install state
@@ -121,16 +123,9 @@ const Settings = () => {
   };
 
   const themeOptions = [
-    { value: 'light', label: 'Light', icon: Sun },
-    { value: 'dark', label: 'Dark', icon: Moon },
-    { value: 'system', label: 'System', icon: SettingsIcon },
-  ];
-
-  const languageOptions = [
-    { value: 'en', label: 'English' },
-    { value: 'pl', label: 'Polski' },
-    { value: 'es', label: 'Español' },
-    { value: 'fr', label: 'Français' },
+    { value: 'light', label: t('settings.light'), icon: Sun },
+    { value: 'dark', label: t('settings.dark'), icon: Moon },
+    { value: 'system', label: t('settings.system'), icon: Monitor },
   ];
 
   if (!isAuthenticated) {
@@ -153,9 +148,9 @@ const Settings = () => {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-3 mb-2">
             <SettingsIcon className="w-8 h-8 text-primary" />
-            <h1 className="text-4xl font-bold">Settings</h1>
+            <h1 className="text-4xl font-bold">{t('settings.title')}</h1>
           </div>
-          <p className="text-muted-foreground">Customize your experience</p>
+          <p className="text-muted-foreground">{t('settings.customizeExperience')}</p>
         </div>
       </div>
 
@@ -166,16 +161,16 @@ const Settings = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Eye className="w-5 h-5" />
-              Appearance
+              {t('settings.appearance')}
             </CardTitle>
             <CardDescription>
-              Customize how the app looks and feels
+              {t('settings.appearanceDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Theme Selection */}
             <div className="space-y-3">
-              <label className="text-sm font-medium">Theme</label>
+              <label className="text-sm font-medium">{t('settings.theme')}</label>
               <div className="grid grid-cols-3 gap-3">
                 {themeOptions.map((option) => {
                   const Icon = option.icon;
@@ -196,9 +191,6 @@ const Settings = () => {
                   );
                 })}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Theme changes will be applied in a future update
-              </p>
             </div>
           </CardContent>
         </Card>
@@ -208,18 +200,18 @@ const Settings = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bell className="w-5 h-5" />
-              Notifications
+              {t('settings.notifications')}
             </CardTitle>
             <CardDescription>
-              Manage your notification preferences
+              {t('settings.notificationsDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Push Notifications</p>
+                <p className="font-medium">{t('settings.pushNotifications')}</p>
                 <p className="text-sm text-muted-foreground">
-                  Receive notifications about new movies and updates
+                  {t('settings.pushNotificationsDesc')}
                 </p>
               </div>
               <button
@@ -239,40 +231,8 @@ const Settings = () => {
             </div>
             <Separator />
             <p className="text-xs text-muted-foreground">
-              Notification settings will be functional in a future update
+              {t('settings.notificationsFuture')}
             </p>
-          </CardContent>
-        </Card>
-
-        {/* Language & Region */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Globe className="w-5 h-5" />
-              Language & Region
-            </CardTitle>
-            <CardDescription>
-              Set your preferred language and regional settings
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Language</label>
-              <select
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-                className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              >
-                {languageOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-muted-foreground">
-                Language support will be added in a future update
-              </p>
-            </div>
           </CardContent>
         </Card>
 
@@ -281,18 +241,18 @@ const Settings = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Volume2 className="w-5 h-5" />
-              Playback
+              {t('settings.playback')}
             </CardTitle>
             <CardDescription>
-              Control video and media playback settings
+              {t('settings.playbackDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Autoplay Videos</p>
+                <p className="font-medium">{t('settings.autoplayVideos')}</p>
                 <p className="text-sm text-muted-foreground">
-                  Automatically play video trailers when available
+                  {t('settings.autoplayVideosDesc')}
                 </p>
               </div>
               <button
@@ -312,7 +272,7 @@ const Settings = () => {
             </div>
             <Separator />
             <p className="text-xs text-muted-foreground">
-              Playback settings will be functional when video support is added
+              {t('settings.playbackFuture')}
             </p>
           </CardContent>
         </Card>
@@ -322,10 +282,10 @@ const Settings = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Smartphone className="w-5 h-5" />
-              Instaluj Aplikację
+              {t('settings.installApp')}
             </CardTitle>
             <CardDescription>
-              Zainstaluj Flickora jako aplikację na swoim urządzeniu
+              {t('settings.installAppDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -334,12 +294,12 @@ const Settings = () => {
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/10 mb-3">
                   <Download className="w-8 h-8 text-green-500" />
                 </div>
-                <p className="font-medium text-green-500 mb-1">Aplikacja zainstalowana!</p>
+                <p className="font-medium text-green-500 mb-1">{t('settings.appInstalled')}</p>
                 <p className="text-sm text-muted-foreground">
-                  Flickora jest już zainstalowana na Twoim urządzeniu
+                  {t('settings.appInstalledDesc')}
                 </p>
                 <p className="text-xs text-muted-foreground mt-3">
-                  Uruchom aplikację z ekranu głównego, aby korzystać w trybie standalone
+                  {t('settings.launchFromHome')}
                 </p>
               </div>
             ) : canShowPrompt && deferredPrompt ? (
@@ -350,28 +310,27 @@ const Settings = () => {
                       <Download className="w-6 h-6 text-purple-500" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium mb-1">Zainstaluj jako aplikację</p>
+                      <p className="font-medium mb-1">{t('settings.installAsApp')}</p>
                       <p className="text-sm text-muted-foreground mb-3">
-                        Dodaj Flickora do ekranu głównego i korzystaj jak z natywnej aplikacji.
-                        Działa offline, szybciej się ładuje i wygląda lepiej!
+                        {t('settings.installAsAppDesc')}
                       </p>
                       <Button
                         onClick={handleInstallClick}
                         className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
                       >
                         <Download className="w-4 h-4 mr-2" />
-                        Zainstaluj teraz
+                        {t('settings.installNow')}
                       </Button>
                     </div>
                   </div>
                 </div>
                 <div className="space-y-2 text-sm text-muted-foreground">
-                  <p className="font-medium text-foreground">Korzyści:</p>
+                  <p className="font-medium text-foreground">{t('settings.benefits')}</p>
                   <ul className="space-y-1 ml-4">
-                    <li>✓ Szybszy dostęp z ekranu głównego</li>
-                    <li>✓ Działa offline z cache</li>
-                    <li>✓ Wygląd i działanie jak natywna aplikacja</li>
-                    <li>✓ Brak paska adresu przeglądarki</li>
+                    <li>✓ {t('settings.benefit1')}</li>
+                    <li>✓ {t('settings.benefit2')}</li>
+                    <li>✓ {t('settings.benefit3')}</li>
+                    <li>✓ {t('settings.benefit4')}</li>
                   </ul>
                 </div>
               </div>
@@ -529,29 +488,29 @@ const Settings = () => {
         {/* About */}
         <Card>
           <CardHeader>
-            <CardTitle>About Flickora</CardTitle>
+            <CardTitle>{t('settings.aboutFlickora')}</CardTitle>
             <CardDescription>
-              Information about this application
+              {t('settings.aboutDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Version</span>
+              <span className="text-muted-foreground">{t('settings.version')}</span>
               <span className="font-medium">1.0.0</span>
             </div>
             <Separator />
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Built with</span>
+              <span className="text-muted-foreground">{t('settings.builtWith')}</span>
               <span className="font-medium">React + Django</span>
             </div>
             <Separator />
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">PWA Enabled</span>
-              <span className="font-medium text-green-500">Yes</span>
+              <span className="text-muted-foreground">{t('settings.pwaEnabled')}</span>
+              <span className="font-medium text-green-500">{t('settings.yes')}</span>
             </div>
             <Separator />
             <p className="text-xs text-muted-foreground">
-              AI-Powered Movie Discovery Platform
+              {t('settings.aiPowered')}
             </p>
           </CardContent>
         </Card>

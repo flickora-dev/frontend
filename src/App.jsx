@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import useAuthStore from './store/authStore';
+import useThemeStore from './store/themeStore';
 import InstallPWA from './components/pwa/InstallPWA';
 
 // Pages (będziemy tworzyć w następnym kroku)
@@ -25,6 +27,12 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function App() {
+  const initTheme = useThemeStore((state) => state.initTheme);
+
+  useEffect(() => {
+    initTheme();
+  }, [initTheme]);
+
   return (
     <BrowserRouter>
       <InstallPWA />

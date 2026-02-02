@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { authAPI, moviesAPI } from '../api';
 import { useNavigate } from 'react-router-dom';
 import { User as UserIcon, User, Mail, Save, Loader2, Eye, Heart, Clock, LogOut, Edit, Trash2, AlertTriangle } from 'lucide-react';
@@ -14,6 +15,7 @@ import useAuthStore from '../store/authStore';
 const Profile = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const { user, isAuthenticated, logout: authLogout } = useAuthStore();
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -125,9 +127,9 @@ const Profile = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
           <UserIcon className="w-16 h-16 mx-auto text-muted-foreground" />
-          <h2 className="text-2xl font-bold">Login Required</h2>
-          <p className="text-muted-foreground">Please log in to view your profile</p>
-          <Button onClick={() => navigate('/login')}>Go to Login</Button>
+          <h2 className="text-2xl font-bold">{t('profile.loginRequired')}</h2>
+          <p className="text-muted-foreground">{t('profile.pleaseLogin')}</p>
+          <Button onClick={() => navigate('/login')}>{t('common.goToLogin')}</Button>
         </div>
       </div>
     );
@@ -148,9 +150,9 @@ const Profile = () => {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-3 mb-2">
             <UserIcon className="w-8 h-8 text-primary" />
-            <h1 className="text-4xl font-bold">My Profile</h1>
+            <h1 className="text-4xl font-bold">{t('profile.title')}</h1>
           </div>
-          <p className="text-muted-foreground">Manage your account and view your statistics</p>
+          <p className="text-muted-foreground">{t('profile.subtitle')}</p>
         </div>
       </div>
 
@@ -158,17 +160,17 @@ const Profile = () => {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="statistics">Statistics</TabsTrigger>
+            <TabsTrigger value="profile">{t('profile.tabProfile')}</TabsTrigger>
+            <TabsTrigger value="statistics">{t('profile.tabStatistics')}</TabsTrigger>
           </TabsList>
 
           {/* Profile Tab */}
           <TabsContent value="profile" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Profile Information</CardTitle>
+                <CardTitle>{t('profile.profileInformation')}</CardTitle>
                 <CardDescription>
-                  Update your account details and personal information
+                  {t('profile.profileInformationDesc')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -177,7 +179,7 @@ const Profile = () => {
                   <div className="space-y-2">
                     <label className="text-sm font-medium flex items-center gap-2">
                       <User className="w-4 h-4" />
-                      Username
+                      {t('profile.username')}
                     </label>
                     <Input
                       type="text"
@@ -193,7 +195,7 @@ const Profile = () => {
                   <div className="space-y-2">
                     <label className="text-sm font-medium flex items-center gap-2">
                       <Mail className="w-4 h-4" />
-                      Email
+                      {t('profile.email')}
                     </label>
                     <Input
                       type="email"
@@ -207,28 +209,28 @@ const Profile = () => {
 
                   {/* First Name */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">First Name</label>
+                    <label className="text-sm font-medium">{t('profile.firstName')}</label>
                     <Input
                       type="text"
                       name="first_name"
                       value={formData.first_name}
                       onChange={handleInputChange}
                       disabled={!isEditing}
-                      placeholder="Enter your first name"
+                      placeholder={t('profile.enterFirstName')}
                       className="w-full"
                     />
                   </div>
 
                   {/* Last Name */}
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Last Name</label>
+                    <label className="text-sm font-medium">{t('profile.lastName')}</label>
                     <Input
                       type="text"
                       name="last_name"
                       value={formData.last_name}
                       onChange={handleInputChange}
                       disabled={!isEditing}
-                      placeholder="Enter your last name"
+                      placeholder={t('profile.enterLastName')}
                       className="w-full"
                     />
                   </div>
@@ -244,7 +246,7 @@ const Profile = () => {
                         className="gap-2"
                       >
                         <Edit className="w-4 h-4" />
-                        Edit Profile
+                        {t('profile.editProfile')}
                       </Button>
                     ) : (
                       <>
@@ -258,7 +260,7 @@ const Profile = () => {
                           ) : (
                             <Save className="w-4 h-4" />
                           )}
-                          Save Changes
+                          {t('profile.saveChanges')}
                         </Button>
                         <Button
                           type="button"
@@ -266,7 +268,7 @@ const Profile = () => {
                           onClick={handleCancel}
                           disabled={updateMutation.isLoading}
                         >
-                          Cancel
+                          {t('common.cancel')}
                         </Button>
                       </>
                     )}
@@ -274,13 +276,13 @@ const Profile = () => {
 
                   {updateMutation.isError && (
                     <p className="text-sm text-destructive">
-                      Failed to update profile. Please try again.
+                      {t('profile.updateFailed')}
                     </p>
                   )}
 
                   {updateMutation.isSuccess && !isEditing && (
                     <p className="text-sm text-green-600">
-                      Profile updated successfully!
+                      {t('profile.updateSuccess')}
                     </p>
                   )}
                 </form>
@@ -290,17 +292,17 @@ const Profile = () => {
             {/* Danger Zone */}
             <Card className="border-destructive/50">
               <CardHeader>
-                <CardTitle className="text-destructive">Danger Zone</CardTitle>
+                <CardTitle className="text-destructive">{t('profile.dangerZone')}</CardTitle>
                 <CardDescription>
-                  Irreversible actions for your account
+                  {t('profile.dangerZoneDesc')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between p-4 border border-border rounded-lg">
                   <div>
-                    <p className="font-medium">Logout</p>
+                    <p className="font-medium">{t('profile.logout')}</p>
                     <p className="text-sm text-muted-foreground">
-                      Sign out of your account
+                      {t('profile.logoutDesc')}
                     </p>
                   </div>
                   <Button
@@ -309,7 +311,7 @@ const Profile = () => {
                     className="gap-2"
                   >
                     <LogOut className="w-4 h-4" />
-                    Logout
+                    {t('profile.logout')}
                   </Button>
                 </div>
 
@@ -317,9 +319,9 @@ const Profile = () => {
 
                 <div className="flex items-center justify-between p-4 border border-destructive/50 rounded-lg bg-destructive/5">
                   <div>
-                    <p className="font-medium text-destructive">Delete Account</p>
+                    <p className="font-medium text-destructive">{t('profile.deleteAccount')}</p>
                     <p className="text-sm text-muted-foreground">
-                      Permanently delete your account and all associated data
+                      {t('profile.deleteAccountDesc')}
                     </p>
                   </div>
                   <Button
@@ -328,7 +330,7 @@ const Profile = () => {
                     className="gap-2"
                   >
                     <Trash2 className="w-4 h-4" />
-                    Delete Account
+                    {t('profile.deleteAccount')}
                   </Button>
                 </div>
               </CardContent>
@@ -342,7 +344,7 @@ const Profile = () => {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Favorite Movies
+                    {t('profile.favoriteMovies')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -352,7 +354,7 @@ const Profile = () => {
                     </div>
                     <div>
                       <p className="text-3xl font-bold">{favoriteCount}</p>
-                      <p className="text-sm text-muted-foreground">movies</p>
+                      <p className="text-sm text-muted-foreground">{t('profile.movies')}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -362,7 +364,7 @@ const Profile = () => {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Recently Viewed
+                    {t('profile.recentlyViewed')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -372,7 +374,7 @@ const Profile = () => {
                     </div>
                     <div>
                       <p className="text-3xl font-bold">{viewedCount}</p>
-                      <p className="text-sm text-muted-foreground">movies</p>
+                      <p className="text-sm text-muted-foreground">{t('profile.movies')}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -382,7 +384,7 @@ const Profile = () => {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Member Since
+                    {t('profile.memberSince')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -394,7 +396,7 @@ const Profile = () => {
                       <p className="text-xl font-bold">
                         {user?.username}
                       </p>
-                      <p className="text-sm text-muted-foreground">active user</p>
+                      <p className="text-sm text-muted-foreground">{t('profile.activeUser')}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -404,9 +406,9 @@ const Profile = () => {
             {/* Quick Links */}
             <Card>
               <CardHeader>
-                <CardTitle>Quick Access</CardTitle>
+                <CardTitle>{t('profile.quickAccess')}</CardTitle>
                 <CardDescription>
-                  Jump to your favorite sections
+                  {t('profile.quickAccessDesc')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-wrap gap-3">
@@ -416,7 +418,7 @@ const Profile = () => {
                   className="gap-2"
                 >
                   <Heart className="w-4 h-4" />
-                  View Favorites
+                  {t('profile.viewFavorites')}
                 </Button>
                 <Button
                   variant="outline"
@@ -424,7 +426,7 @@ const Profile = () => {
                   className="gap-2"
                 >
                   <Clock className="w-4 h-4" />
-                  Recent Chats
+                  {t('profile.recentChats')}
                 </Button>
                 <Button
                   variant="outline"
@@ -432,7 +434,7 @@ const Profile = () => {
                   className="gap-2"
                 >
                   <Eye className="w-4 h-4" />
-                  Browse Movies
+                  {t('profile.browseMovies')}
                 </Button>
               </CardContent>
             </Card>
@@ -446,21 +448,21 @@ const Profile = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <AlertTriangle className="w-5 h-5" />
-              Delete Account
+              {t('profile.deleteAccountTitle')}
             </DialogTitle>
             <DialogDescription className="space-y-3 pt-4">
               <p className="text-base font-medium text-foreground">
-                This action cannot be undone. This will permanently delete your account and remove all associated data including:
+                {t('profile.deleteAccountWarning')}
               </p>
               <ul className="list-disc list-inside space-y-1 text-sm">
-                <li>Your profile information</li>
-                <li>All favorite movies</li>
-                <li>Chat history and conversations</li>
-                <li>Recently viewed movies</li>
-                <li>All account settings</li>
+                <li>{t('profile.deleteDataProfile')}</li>
+                <li>{t('profile.deleteDataFavorites')}</li>
+                <li>{t('profile.deleteDataChats')}</li>
+                <li>{t('profile.deleteDataViewed')}</li>
+                <li>{t('profile.deleteDataSettings')}</li>
               </ul>
               <p className="text-sm text-muted-foreground pt-2">
-                To confirm deletion, please type <span className="font-mono font-semibold text-foreground">DELETE</span> in the box below:
+                {t('profile.deleteConfirmText')} <span className="font-mono font-semibold text-foreground">DELETE</span>:
               </p>
             </DialogDescription>
           </DialogHeader>
@@ -469,7 +471,7 @@ const Profile = () => {
               type="text"
               value={deleteConfirmText}
               onChange={(e) => setDeleteConfirmText(e.target.value)}
-              placeholder="Type DELETE to confirm"
+              placeholder={t('profile.deleteConfirmPlaceholder')}
               className="font-mono"
             />
           </div>
@@ -483,7 +485,7 @@ const Profile = () => {
               }}
               disabled={deleteAccountMutation.isLoading}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="button"
@@ -495,12 +497,12 @@ const Profile = () => {
               {deleteAccountMutation.isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Deleting...
+                  {t('profile.deleting')}
                 </>
               ) : (
                 <>
                   <Trash2 className="w-4 h-4" />
-                  Delete Account
+                  {t('profile.deleteAccount')}
                 </>
               )}
             </Button>

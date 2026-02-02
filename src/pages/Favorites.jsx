@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { moviesAPI } from '../api';
 import { Link } from 'react-router-dom';
 import { Heart, Loader2, Star, Trash2 } from 'lucide-react';
@@ -9,6 +10,7 @@ import useAuthStore from '../store/authStore';
 const Favorites = () => {
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuthStore();
+  const { t } = useTranslation();
 
   const { data: favoritesData, isLoading, isError } = useQuery({
     queryKey: ['favorites'],
@@ -42,10 +44,10 @@ const Favorites = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
           <Heart className="w-16 h-16 mx-auto text-muted-foreground" />
-          <h2 className="text-2xl font-bold">Login Required</h2>
-          <p className="text-muted-foreground">Please log in to view your favorite movies</p>
+          <h2 className="text-2xl font-bold">{t('favorites.loginRequired')}</h2>
+          <p className="text-muted-foreground">{t('favorites.pleaseLogin')}</p>
           <Button asChild>
-            <Link to="/login">Go to Login</Link>
+            <Link to="/login">{t('common.goToLogin')}</Link>
           </Button>
         </div>
       </div>
@@ -56,8 +58,8 @@ const Favorites = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
-          <p className="text-destructive">Failed to load favorites</p>
-          <Button onClick={() => window.location.reload()}>Retry</Button>
+          <p className="text-destructive">{t('favorites.failedToLoad')}</p>
+          <Button onClick={() => window.location.reload()}>{t('common.retry')}</Button>
         </div>
       </div>
     );
@@ -69,10 +71,10 @@ const Favorites = () => {
       <div className="bg-gradient-to-b from-primary/10 to-background py-8 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-4xl font-bold">My Favorites</h1>
+            <h1 className="text-4xl font-bold">{t('favorites.title')}</h1>
           </div>
           <p className="text-muted-foreground">
-            {isLoading ? 'Loading...' : `${movies.length} ${movies.length === 1 ? 'movie' : 'movies'} in your favorites`}
+            {isLoading ? t('common.loading') : t('favorites.moviesInFavorites', { count: movies.length })}
           </p>
         </div>
       </div>
@@ -87,13 +89,13 @@ const Favorites = () => {
           <div className="text-center py-20 space-y-6">
             <Heart className="w-20 h-20 mx-auto text-muted-foreground" />
             <div className="space-y-2">
-              <h2 className="text-2xl font-bold">No favorites yet</h2>
+              <h2 className="text-2xl font-bold">{t('favorites.noFavoritesYet')}</h2>
               <p className="text-muted-foreground max-w-md mx-auto">
-                Start adding movies to your favorites by clicking the heart icon on any movie
+                {t('favorites.startAddingFavorites')}
               </p>
             </div>
             <Button asChild>
-              <Link to="/movies">Browse Movies</Link>
+              <Link to="/movies">{t('favorites.browseMovies')}</Link>
             </Button>
           </div>
         ) : (
@@ -129,7 +131,7 @@ const Favorites = () => {
                         onClick={(e) => handleRemoveFavorite(movie.id, movie.title, e)}
                         disabled={removeMutation.isLoading}
                         className="absolute top-2 left-2 p-2 rounded-md bg-black/70 backdrop-blur-sm hover:bg-red-500/90 transition-all opacity-0 group-hover:opacity-100"
-                        title="Remove from favorites"
+                        title={t('favorites.removeFromFavorites')}
                       >
                         {removeMutation.isLoading && removeMutation.variables === movie.id ? (
                           <Loader2 className="w-4 h-4 animate-spin" />

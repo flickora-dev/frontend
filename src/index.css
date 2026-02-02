@@ -3,7 +3,41 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  /* Light Theme */
+  :root.light {
+    --background: 210 20% 98%;      /* Light grayish blue */
+    --foreground: 215 25% 15%;      /* Dark navy text */
+
+    --card: 0 0% 100%;              /* White cards */
+    --card-foreground: 215 25% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 15%;
+
+    --primary: 210 56% 45%;         /* Ocean blue - slightly darker for contrast */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 20% 93%;
+    --secondary-foreground: 215 25% 15%;
+
+    --muted: 210 20% 95%;
+    --muted-foreground: 215 15% 45%;
+
+    --accent: 210 20% 93%;
+    --accent-foreground: 215 25% 15%;
+
+    --destructive: 0 84% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 20% 85%;
+    --input: 210 20% 93%;
+    --ring: 210 56% 45%;
+
+    --radius: 0.5rem;
+  }
+
+  /* Dark Theme (default) */
+  :root, :root.dark {
     /* Ocean Blues Color Palette */
     --background: 215 45% 6%;     /* #04080f - Deep navy */
     --foreground: 210 17% 86%;    /* #dae3e5 - Mist blue */

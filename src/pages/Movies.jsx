@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { moviesAPI } from '../api';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Search, Loader2, Star, X, ChevronLeft, ChevronRight, SlidersHorizontal } from 'lucide-react';
@@ -13,6 +14,7 @@ import { cn } from '../lib/utils';
 const Movies = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { t } = useTranslation();
 
   // State from URL params - now supporting multiple values
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
@@ -100,12 +102,12 @@ const Movies = () => {
   );
 
   const sortOptions = [
-    { value: '-year', label: 'Newest First' },
-    { value: 'year', label: 'Oldest First' },
-    { value: '-imdb_rating', label: 'Highest Rated' },
-    { value: 'imdb_rating', label: 'Lowest Rated' },
-    { value: 'title', label: 'Title A-Z' },
-    { value: '-title', label: 'Title Z-A' },
+    { value: '-year', label: t('movies.newestFirst') },
+    { value: 'year', label: t('movies.oldestFirst') },
+    { value: '-imdb_rating', label: t('movies.highestRated') },
+    { value: 'imdb_rating', label: t('movies.lowestRated') },
+    { value: 'title', label: t('movies.titleAZ') },
+    { value: '-title', label: t('movies.titleZA') },
   ];
 
   const handleClearFilters = () => {
@@ -152,8 +154,8 @@ const Movies = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
-          <p className="text-destructive">Failed to load movies</p>
-          <Button onClick={() => window.location.reload()}>Retry</Button>
+          <p className="text-destructive">{t('movies.failedToLoad')}</p>
+          <Button onClick={() => window.location.reload()}>{t('movies.retry')}</Button>
         </div>
       </div>
     );
@@ -165,8 +167,8 @@ const Movies = () => {
       <div className="bg-gradient-to-b from-primary/10 to-background py-8 px-4">
         <div className="max-w-7xl mx-auto space-y-6">
           <div>
-            <h1 className="text-4xl font-bold mb-2">Discover Movies</h1>
-            <p className="text-muted-foreground">Browse our collection of analyzed movies</p>
+            <h1 className="text-4xl font-bold mb-2">{t('movies.discover')}</h1>
+            <p className="text-muted-foreground">{t('movies.browseCollection')}</p>
           </div>
 
           {/* Search Bar */}
@@ -174,7 +176,7 @@ const Movies = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search movies by title, director..."
+              placeholder={t('movies.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 pr-4 h-12 text-base"
@@ -189,7 +191,7 @@ const Movies = () => {
               className="gap-2"
             >
               <SlidersHorizontal className="w-4 h-4" />
-              Filters
+              {t('movies.filters')}
               {(selectedGenres.length > 0 || yearFrom || yearTo) && (
                 <span className="ml-1 px-1.5 py-0.5 text-xs bg-primary text-primary-foreground rounded-full">
                   {selectedGenres.length + (yearFrom || yearTo ? 1 : 0)}
@@ -198,7 +200,7 @@ const Movies = () => {
             </Button>
 
             <span className="text-sm text-muted-foreground">
-              {totalCount} {totalCount === 1 ? 'movie' : 'movies'} found
+              {t('movies.moviesFound', { count: totalCount })}
             </span>
 
             {/* Sort By - always visible */}
@@ -207,7 +209,7 @@ const Movies = () => {
                 options={sortOptions}
                 value={sortBy}
                 onChange={setSortBy}
-                placeholder="Sort by"
+                placeholder={t('movies.sortBy')}
                 multiple={false}
               />
             </div>
@@ -236,8 +238,8 @@ const Movies = () => {
                   {yearFrom && yearTo
                     ? `${yearFrom} - ${yearTo}`
                     : yearFrom
-                    ? `From ${yearFrom}`
-                    : `To ${yearTo}`}
+                    ? `${t('common.from')} ${yearFrom}`
+                    : `${t('common.to')} ${yearTo}`}
                   <button
                     onClick={clearYearRange}
                     className="hover:bg-primary-foreground/20 rounded-full p-0.5 transition-colors"
@@ -253,7 +255,7 @@ const Movies = () => {
                 onClick={handleClearFilters}
                 className="text-muted-foreground hover:text-foreground h-8"
               >
-                Clear all
+                {t('movies.clearAll')}
               </Button>
             </div>
           )}
@@ -283,10 +285,10 @@ const Movies = () => {
           </div>
         ) : movies.length === 0 ? (
           <div className="text-center py-20 space-y-4">
-            <p className="text-xl text-muted-foreground">No movies found</p>
+            <p className="text-xl text-muted-foreground">{t('movies.noMoviesFound')}</p>
             {hasActiveFilters && (
               <Button onClick={handleClearFilters} variant="outline">
-                Clear Filters
+                {t('movies.clearFilters')}
               </Button>
             )}
           </div>
@@ -340,7 +342,7 @@ const Movies = () => {
                   className="gap-1"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  Previous
+                  {t('common.previous')}
                 </Button>
 
                 <div className="flex items-center gap-1">
@@ -398,7 +400,7 @@ const Movies = () => {
                   disabled={!hasNextPage}
                   className="gap-1"
                 >
-                  Next
+                  {t('common.next')}
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>

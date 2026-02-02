@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Film, Loader2, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import useAuthStore from '../store/authStore';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -10,6 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 const Login = () => {
   const navigate = useNavigate();
   const { login, isLoading, error, clearError } = useAuthStore();
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -52,7 +54,7 @@ const Login = () => {
       }
     } catch (err) {
       console.error('Login submission error:', err);
-      setLocalError('An unexpected error occurred. Please try again.');
+      setLocalError(t('auth.unexpectedError'));
     }
   };
 
@@ -70,9 +72,9 @@ const Login = () => {
         {/* Login Card */}
         <Card id="login-card" className="border-border">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
+            <CardTitle className="text-2xl font-bold">{t('auth.welcomeBack')}</CardTitle>
             <CardDescription>
-              Sign in to continue your movie journey
+              {t('auth.signInToContinue')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -81,35 +83,35 @@ const Login = () => {
                 <div className="p-3 rounded-md bg-destructive/10 border border-destructive text-destructive text-sm flex items-start gap-2 animate-in fade-in-50 slide-in-from-top-2">
                   <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="font-medium">Login Failed</p>
+                    <p className="font-medium">{t('auth.loginFailed')}</p>
                     <p className="text-xs mt-1">{localError}</p>
                   </div>
                 </div>
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username">{t('auth.username')}</Label>
                 <Input
                   id="username"
                   type="text"
                   name="username"
                   value={formData.username}
                   onChange={handleChange}
-                  placeholder="Enter your username"
+                  placeholder={t('auth.enterYourUsername')}
                   required
                   disabled={isLoading}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t('auth.password')}</Label>
                 <Input
                   id="password"
                   type="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="Enter your password"
+                  placeholder={t('auth.enterYourPassword')}
                   required
                   disabled={isLoading}
                 />
@@ -123,19 +125,19 @@ const Login = () => {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
+                    {t('auth.signingIn')}
                   </>
                 ) : (
-                  'Sign In'
+                  t('auth.signIn')
                 )}
               </Button>
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-sm text-muted-foreground text-center">
-              Don't have an account?{' '}
+              {t('auth.dontHaveAccount')}{' '}
               <Link to="/register" className="text-primary hover:underline font-medium">
-                Sign up
+                {t('auth.signUp')}
               </Link>
             </div>
           </CardFooter>
@@ -144,7 +146,7 @@ const Login = () => {
         {/* Back Link */}
         <div className="text-center">
           <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1">
-            ← Back to Home
+            ← {t('auth.backToHome')}
           </Link>
         </div>
       </div>

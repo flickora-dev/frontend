@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, AlertCircle } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Button } from './button';
@@ -19,6 +20,7 @@ const FilterModal = ({
 }) => {
   const modalRef = useRef(null);
   const [yearError, setYearError] = useState('');
+  const { t } = useTranslation();
 
   // Validate year range
   useEffect(() => {
@@ -26,14 +28,14 @@ const FilterModal = ({
       const from = parseInt(yearFrom);
       const to = parseInt(yearTo);
       if (from > to) {
-        setYearError('Start year cannot be greater than end year');
+        setYearError(t('filters.yearErrorStartGreater'));
       } else {
         setYearError('');
       }
     } else {
       setYearError('');
     }
-  }, [yearFrom, yearTo]);
+  }, [yearFrom, yearTo, t]);
 
   // Handle year input with validation (max 4 digits, 1-9999)
   const handleYearChange = (value, onChange) => {
@@ -103,7 +105,7 @@ const FilterModal = ({
           {/* Genres */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
-              Genres
+              {t('filters.genres')}
             </h3>
             <div className="flex flex-wrap gap-2">
               {genres.map((genre) => {
@@ -139,7 +141,7 @@ const FilterModal = ({
           {/* Release Year */}
           <div className="space-y-4">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
-              Release Year
+              {t('filters.releaseYear')}
             </h3>
             <div className="flex items-center gap-4">
               <Input
@@ -148,20 +150,20 @@ const FilterModal = ({
                 maxLength={4}
                 value={yearFrom}
                 onChange={(e) => handleYearChange(e.target.value, onYearFromChange)}
-                placeholder="From"
+                placeholder={t('common.from')}
                 className={cn(
                   "h-12 w-32 text-center text-lg",
                   yearError && yearFrom && "border-destructive focus-visible:ring-destructive"
                 )}
               />
-              <span className="text-muted-foreground font-medium">to</span>
+              <span className="text-muted-foreground font-medium">{t('common.to').toLowerCase()}</span>
               <Input
                 type="text"
                 inputMode="numeric"
                 maxLength={4}
                 value={yearTo}
                 onChange={(e) => handleYearChange(e.target.value, onYearToChange)}
-                placeholder="To"
+                placeholder={t('common.to')}
                 className={cn(
                   "h-12 w-32 text-center text-lg",
                   yearError && yearTo && "border-destructive focus-visible:ring-destructive"
@@ -184,14 +186,14 @@ const FilterModal = ({
             onClick={onClearAll}
             className="text-muted-foreground"
           >
-            Clear all filters
+            {t('filters.clearAllFilters')}
           </Button>
           <Button
             onClick={onApply}
             disabled={!canApply}
             className="px-8"
           >
-            Apply Filters
+            {t('filters.applyFilters')}
           </Button>
         </div>
       </div>

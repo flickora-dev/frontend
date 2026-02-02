@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { chatAPI } from '../api/chat';
 import { Send, Download, Trash2, RotateCw, MessageCircle, Sparkles } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -12,6 +13,7 @@ import { cn } from '../lib/utils';
 const Chat = () => {
   const location = useLocation();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const [chatMessage, setChatMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [conversationId, setConversationId] = useState(null);
@@ -64,7 +66,7 @@ const Chat = () => {
       console.error('Chat error:', error);
       const errorMessage = {
         role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
+        content: t('chat.errorMessage'),
         isError: true,
         timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
       };
@@ -150,9 +152,9 @@ const Chat = () => {
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <MessageCircle className="w-5 h-5 md:w-6 md:h-6 text-primary flex-shrink-0" />
             <div className="min-w-0">
-              <h1 className="text-lg md:text-2xl font-bold truncate">Global Movie Chat</h1>
+              <h1 className="text-lg md:text-2xl font-bold truncate">{t('chat.globalMovieChat')}</h1>
               <p className="text-xs md:text-sm text-muted-foreground hidden md:block">
-                Ask anything about movies, get instant AI responses
+                {t('chat.askAnythingAboutMovies')}
               </p>
             </div>
           </div>
@@ -162,7 +164,7 @@ const Chat = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
               </span>
-              AI Online
+              {t('chat.aiOnline')}
             </div>
             <Button
               variant="outline"
@@ -172,7 +174,7 @@ const Chat = () => {
               className="gap-2 h-8 md:h-9"
             >
               <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">Export</span>
+              <span className="hidden sm:inline">{t('chat.export')}</span>
             </Button>
             <Button
               variant="outline"
@@ -182,7 +184,7 @@ const Chat = () => {
               className="gap-2 h-8 md:h-9"
             >
               <Trash2 className="w-4 h-4" />
-              <span className="hidden sm:inline">Clear</span>
+              <span className="hidden sm:inline">{t('chat.clear')}</span>
             </Button>
           </div>
         </div>
@@ -198,8 +200,8 @@ const Chat = () => {
                 <Sparkles className="w-8 h-8 text-primary" />
               </div>
               <div className="space-y-2">
-                <h2 className="text-xl font-semibold">Hi! I'm your movie AI assistant</h2>
-                <p className="text-muted-foreground">Ask me anything about movies!</p>
+                <h2 className="text-xl font-semibold">{t('chat.hiImYourMovieAI')}</h2>
+                <p className="text-muted-foreground">{t('chat.askMeAnythingAboutMovies')}</p>
               </div>
             </div>
           )}
@@ -293,7 +295,7 @@ const Chat = () => {
                 onClick={handleRefreshSuggestions}
                 disabled={sendMessageMutation.isPending}
                 className="px-2"
-                title="Refresh suggestions"
+                title={t('chat.refreshSuggestions')}
               >
                 <RotateCw className="w-4 h-4" />
               </Button>
@@ -305,7 +307,7 @@ const Chat = () => {
               type="text"
               value={chatMessage}
               onChange={(e) => setChatMessage(e.target.value)}
-              placeholder="Ask about movies..."
+              placeholder={t('chat.askAboutMoviesPlaceholder')}
               disabled={sendMessageMutation.isPending}
               className="flex-1"
             />
