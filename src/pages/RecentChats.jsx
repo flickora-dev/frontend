@@ -3,16 +3,18 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { chatAPI } from '../api/chat';
-import { MessageCircle, Film, ChevronLeft, MessagesSquare } from 'lucide-react';
+import { MessageCircle, Film, ChevronLeft, MessagesSquare, LogIn } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { cn } from '../lib/utils';
 import ConversationView from '../components/chat/ConversationView';
+import useAuthStore from '../store/authStore';
 
 const RecentChats = () => {
   const { conversationId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  const { isAuthenticated } = useAuthStore();
   const [selectedConversation, setSelectedConversation] = useState(null);
 
   // Fetch conversations
@@ -114,6 +116,27 @@ const RecentChats = () => {
   const getMoviePoster = (conv) => {
     return conv.movie_poster || null;
   };
+
+  // Login required check
+  if (!isAuthenticated) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-background">
+        <div className="flex flex-col items-center justify-center h-full w-full max-w-md mx-auto p-6 text-center">
+          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+            <MessagesSquare className="w-10 h-10 text-primary" />
+          </div>
+          <h1 className="text-2xl font-bold mb-2">{t('chat.loginRequired')}</h1>
+          <p className="text-muted-foreground mb-6">
+            {t('recentChats.pleaseLoginToView')}
+          </p>
+          <Button onClick={() => navigate('/login')} className="gap-2">
+            <LogIn className="w-4 h-4" />
+            {t('common.goToLogin')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-background">

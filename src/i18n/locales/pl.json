@@ -133,7 +133,14 @@
     "askMeAnythingAboutMovies": "Zapytaj mnie o cokolwiek związanego z filmami!",
     "askAboutMoviesPlaceholder": "Zapytaj o filmy...",
     "refreshSuggestions": "Odśwież sugestie",
-    "errorMessage": "Przepraszam, wystąpił błąd. Spróbuj ponownie."
+    "errorMessage": "Przepraszam, wystąpił błąd. Spróbuj ponownie.",
+    "loginRequired": "Wymagane logowanie",
+    "pleaseLoginToChat": "Zaloguj się, aby korzystać z czatu i otrzymywać rekomendacje filmów od AI",
+    "stop": "Stop",
+    "stopResponse": "Zatrzymaj generowanie odpowiedzi",
+    "responseStopped": "Odpowiedź została zatrzymana przez użytkownika.",
+    "generating": "Generowanie...",
+    "continueConversation": "Kontynuuj rozmowę..."
   },
   "recentChats": {
     "title": "Ostatnie rozmowy",
@@ -149,6 +156,7 @@
     "newChat": "Nowy czat",
     "noMessagesYet": "Brak wiadomości",
     "confirmDeleteAll": "Czy na pewno chcesz usunąć wszystkie rozmowy?",
+    "pleaseLoginToView": "Zaloguj się, aby zobaczyć ostatnie rozmowy",
     "timeAgo": {
       "minute_one": "{{count}} minutę temu",
       "minute_few": "{{count}} minuty temu",

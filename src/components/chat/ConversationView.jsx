@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { chatAPI } from '../../api/chat';
-import { Send, Download, Film, Globe, Sparkles, Calendar } from 'lucide-react';
+import { Send, Download, Film, Globe, Sparkles, Calendar, StopCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -10,12 +11,17 @@ import { cn } from '../../lib/utils';
 
 const ConversationView = ({ conversation }) => {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const [newMessage, setNewMessage] = useState('');
   const [localMessages, setLocalMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const [typingMessage, setTypingMessage] = useState('');
   const [typingMessageId, setTypingMessageId] = useState(null);
+  const [isResponseStopped, setIsResponseStopped] = useState(false);
   const messagesContainerRef = useRef(null);
+  const abortControllerRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+  const isMutatingRef = useRef(false);
 
   // Sync local messages with conversation messages
   useEffect(() => {
@@ -24,9 +30,15 @@ const ConversationView = ({ conversation }) => {
 
   // Typing effect function
   const typeMessage = (message, messageId, index = 0) => {
+    if (isResponseStopped) {
+      setIsTyping(false);
+      setTypingMessage('');
+      setTypingMessageId(null);
+      return;
+    }
     if (index < message.length) {
       setTypingMessage(prev => prev + message.charAt(index));
-      setTimeout(() => typeMessage(message, messageId, index + 1), 15);
+      typingTimeoutRef.current = setTimeout(() => typeMessage(message, messageId, index + 1), 15);
     } else {
       setIsTyping(false);
       setTypingMessage('');
@@ -34,14 +46,37 @@ const ConversationView = ({ conversation }) => {
     }
   };
 
+  // Stop response handler
+  const handleStopResponse = () => {
+    setIsResponseStopped(true);
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    setIsTyping(false);
+    setTypingMessage('');
+    setTypingMessageId(null);
+  };
+
   // Send message mutation
   const sendMessageMutation = useMutation({
-    mutationFn: (message) =>
-      chatAPI.sendMessage(
+    mutationFn: (message) => {
+      // Prevent double calls (React StrictMode)
+      if (isMutatingRef.current) {
+        return Promise.reject(new Error('Already mutating'));
+      }
+      isMutatingRef.current = true;
+      abortControllerRef.current = new AbortController();
+      setIsResponseStopped(false);
+      return chatAPI.sendMessage(
         message,
         conversation.conversation_type === 'movie' ? conversation.movie?.id : null,
-        conversation.id
-      ),
+        conversation.id,
+        abortControllerRef.current.signal
+      );
+    },
     onMutate: async (messageText) => {
       // Add user message immediately to local state
       const userMessage = {
@@ -54,6 +89,9 @@ const ConversationView = ({ conversation }) => {
       setNewMessage('');
     },
     onSuccess: (response) => {
+      isMutatingRef.current = false;
+      if (isResponseStopped) return;
+
       // Add AI message with typing effect
       const aiMessage = {
         id: Date.now() + 1,
@@ -74,11 +112,26 @@ const ConversationView = ({ conversation }) => {
       queryClient.refetchQueries({ queryKey: ['conversations'] });
     },
     onError: (error) => {
+      isMutatingRef.current = false;
+      // Ignore "Already mutating" errors from StrictMode double-calls
+      if (error.message === 'Already mutating') return;
+
+      if (error.name === 'CanceledError' || isResponseStopped) {
+        const stoppedMessage = {
+          id: Date.now() + 1,
+          role: 'assistant',
+          content: t('chat.responseStopped'),
+          created_at: new Date().toISOString(),
+          isStopped: true,
+        };
+        setLocalMessages(prev => [...prev, stoppedMessage]);
+        return;
+      }
       console.error('Chat error:', error);
       const errorMessage = {
         id: Date.now() + 1,
         role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
+        content: t('chat.errorMessage'),
         created_at: new Date().toISOString(),
         isError: true,
       };
@@ -229,7 +282,7 @@ const ConversationView = ({ conversation }) => {
           </div>
         ))}
 
-        {sendMessageMutation.isPending && !isTyping && (
+        {(sendMessageMutation.isPending || isTyping) && (
           <div className="flex gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
             <div className="w-8 h-8 rounded-md bg-card border flex items-center justify-center flex-shrink-0">
               <Sparkles className="w-4 h-4 text-primary" />
@@ -252,17 +305,28 @@ const ConversationView = ({ conversation }) => {
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Continue the conversation..."
+            placeholder={t('chat.continueConversation')}
             disabled={sendMessageMutation.isPending || isTyping}
             className="flex-1"
           />
-          <Button
-            type="submit"
-            disabled={!newMessage.trim() || sendMessageMutation.isPending || isTyping}
-            className="gap-2"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
+          {(sendMessageMutation.isPending || isTyping) ? (
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleStopResponse}
+              title={t('chat.stopResponse')}
+            >
+              <StopCircle className="w-4 h-4" />
+            </Button>
+          ) : (
+            <Button
+              type="submit"
+              disabled={!newMessage.trim()}
+              className="gap-2"
+            >
+              <Send className="w-4 h-4" />
+            </Button>
+          )}
         </form>
       </div>
     </div>

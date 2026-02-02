@@ -131,7 +131,14 @@
     "askMeAnythingAboutMovies": "Ask me anything about movies!",
     "askAboutMoviesPlaceholder": "Ask about movies...",
     "refreshSuggestions": "Refresh suggestions",
-    "errorMessage": "Sorry, I encountered an error. Please try again."
+    "errorMessage": "Sorry, I encountered an error. Please try again.",
+    "loginRequired": "Login Required",
+    "pleaseLoginToChat": "Please log in to use the chat feature and get AI-powered movie recommendations",
+    "stop": "Stop",
+    "stopResponse": "Stop generating response",
+    "responseStopped": "Response was stopped by user.",
+    "generating": "Generating...",
+    "continueConversation": "Continue the conversation..."
   },
   "recentChats": {
     "title": "Recent Conversations",
@@ -147,6 +154,7 @@
     "newChat": "New Chat",
     "noMessagesYet": "No messages yet",
     "confirmDeleteAll": "Are you sure you want to delete all conversations?",
+    "pleaseLoginToView": "Please log in to view your recent conversations",
     "timeAgo": {
       "minute_one": "{{count}} minute ago",
       "minute_other": "{{count}} minutes ago",

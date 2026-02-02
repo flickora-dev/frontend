@@ -1,24 +1,30 @@
 import { useState, useEffect, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { chatAPI } from '../api/chat';
-import { Send, Download, Trash2, RotateCw, MessageCircle, Sparkles } from 'lucide-react';
+import { Send, Download, Trash2, RotateCw, MessageCircle, Sparkles, LogIn, StopCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card } from '../components/ui/card';
 import { cn } from '../lib/utils';
+import useAuthStore from '../store/authStore';
 
 const Chat = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
+  const { isAuthenticated } = useAuthStore();
   const [chatMessage, setChatMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [conversationId, setConversationId] = useState(null);
+  const [isResponseStopped, setIsResponseStopped] = useState(false);
   const conversationIdRef = useRef(null);
   const messagesContainerRef = useRef(null);
+  const abortControllerRef = useRef(null);
+  const isMutatingRef = useRef(false);
 
   const [quickSuggestions, setQuickSuggestions] = useState([
     "Recommend a thriller",
@@ -42,8 +48,20 @@ const Chat = () => {
   ];
 
   const sendMessageMutation = useMutation({
-    mutationFn: (message) => chatAPI.sendMessage(message, null, conversationIdRef.current),
+    mutationFn: (message) => {
+      // Prevent double calls (React StrictMode)
+      if (isMutatingRef.current) {
+        return Promise.reject(new Error('Already mutating'));
+      }
+      isMutatingRef.current = true;
+      abortControllerRef.current = new AbortController();
+      setIsResponseStopped(false);
+      return chatAPI.sendMessage(message, null, conversationIdRef.current, abortControllerRef.current.signal);
+    },
     onSuccess: (response) => {
+      isMutatingRef.current = false;
+      if (isResponseStopped) return;
+
       // Save conversation_id for subsequent messages
       if (response.data.conversation_id) {
         conversationIdRef.current = response.data.conversation_id;
@@ -63,6 +81,21 @@ const Chat = () => {
       queryClient.invalidateQueries({ queryKey: ['conversation', response.data.conversation_id] });
     },
     onError: (error) => {
+      isMutatingRef.current = false;
+      // Ignore "Already mutating" errors from StrictMode double-calls
+      if (error.message === 'Already mutating') return;
+
+      if (error.name === 'CanceledError' || isResponseStopped) {
+        // Request was cancelled by user
+        const stoppedMessage = {
+          role: 'assistant',
+          content: t('chat.responseStopped'),
+          isStopped: true,
+          timestamp: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+        };
+        setMessages(prev => [...prev, stoppedMessage]);
+        return;
+      }
       console.error('Chat error:', error);
       const errorMessage = {
         role: 'assistant',
@@ -74,6 +107,13 @@ const Chat = () => {
     }
   });
 
+  const handleStopResponse = () => {
+    if (abortControllerRef.current) {
+      setIsResponseStopped(true);
+      abortControllerRef.current.abort();
+    }
+  };
+
   const scrollToBottom = () => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
@@ -84,8 +124,11 @@ const Chat = () => {
     scrollToBottom();
   }, [messages, sendMessageMutation.isPending]);
 
+  // Handle initial question from navigation state (e.g., from home page)
+  const initialQuestionHandled = useRef(false);
   useEffect(() => {
-    if (location.state?.initialQuestion) {
+    if (location.state?.initialQuestion && !initialQuestionHandled.current) {
+      initialQuestionHandled.current = true;
       const userMessage = {
         role: 'user',
         content: location.state.initialQuestion,
@@ -93,6 +136,8 @@ const Chat = () => {
       };
       setMessages([userMessage]);
       sendMessageMutation.mutate(location.state.initialQuestion);
+      // Clear the state to prevent re-triggering on navigation
+      window.history.replaceState({}, document.title);
     }
   }, [location.state]);
 
@@ -143,6 +188,27 @@ const Chat = () => {
     const shuffled = [...allSuggestions].sort(() => Math.random() - 0.5);
     setQuickSuggestions(shuffled.slice(0, 3));
   };
+
+  // Login required check
+  if (!isAuthenticated) {
+    return (
+      <div className="flex flex-col h-[calc(100vh-4rem-4rem)] md:h-[calc(100vh-4rem)] max-h-screen overflow-hidden">
+        <div className="flex flex-col items-center justify-center h-full max-w-md mx-auto w-full p-6 text-center">
+          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+            <MessageCircle className="w-10 h-10 text-primary" />
+          </div>
+          <h1 className="text-2xl font-bold mb-2">{t('chat.loginRequired')}</h1>
+          <p className="text-muted-foreground mb-6">
+            {t('chat.pleaseLoginToChat')}
+          </p>
+          <Button onClick={() => navigate('/login')} className="gap-2">
+            <LogIn className="w-4 h-4" />
+            {t('common.goToLogin')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem-4rem)] md:h-[calc(100vh-4rem)] max-h-screen overflow-hidden">
@@ -311,13 +377,24 @@ const Chat = () => {
               disabled={sendMessageMutation.isPending}
               className="flex-1"
             />
-            <Button
-              type="submit"
-              disabled={!chatMessage.trim() || sendMessageMutation.isPending}
-              className="gap-2"
-            >
-              <Send className="w-4 h-4" />
-            </Button>
+            {sendMessageMutation.isPending ? (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleStopResponse}
+                title={t('chat.stopResponse')}
+              >
+                <StopCircle className="w-4 h-4" />
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                disabled={!chatMessage.trim()}
+                className="gap-2"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            )}
           </form>
         </div>
       </div>

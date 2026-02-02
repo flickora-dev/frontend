@@ -1,8 +1,9 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { moviesAPI } from '../api';
 import { chatAPI } from '../api/chat';
-import { Star, ArrowLeft, ChevronDown, Film, Heart, Share2, Send, Sparkles, Loader2, User } from 'lucide-react';
+import { Star, ArrowLeft, ChevronDown, Film, Heart, Share2, Send, Sparkles, Loader2, User, LogIn, StopCircle } from 'lucide-react';
 import { useState, useRef, useEffect  } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '../components/ui/button';
@@ -14,7 +15,9 @@ import useAuthStore from '../store/authStore';
 
 const MovieDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const { isAuthenticated } = useAuthStore();
   const [expandedSections, setExpandedSections] = useState({});
   const [showFullSynopsis, setShowFullSynopsis] = useState(false);
@@ -22,8 +25,12 @@ const MovieDetail = () => {
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const [typingMessage, setTypingMessage] = useState('');
+  const [isResponseStopped, setIsResponseStopped] = useState(false);
   const conversationIdRef = useRef(null);
   const messagesContainerRef  = useRef(null);
+  const abortControllerRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+  const isMutatingRef = useRef(false);
 
 
   const scrollToBottom = () => {
@@ -42,13 +49,30 @@ const MovieDetail = () => {
     enabled: !!id
   });
   const typeMessage = (message, index = 0) => {
-  if (index < message.length) {
+    if (isResponseStopped) {
+      setIsTyping(false);
+      setTypingMessage('');
+      return;
+    }
+    if (index < message.length) {
       setTypingMessage(prev => prev + message.charAt(index));
-      setTimeout(() => typeMessage(message, index + 1), 20);
+      typingTimeoutRef.current = setTimeout(() => typeMessage(message, index + 1), 20);
     } else {
       setIsTyping(false);
       setTypingMessage('');
     }
+  };
+
+  const handleStopResponse = () => {
+    setIsResponseStopped(true);
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    setIsTyping(false);
+    setTypingMessage('');
   };  
 
   const { data: castData } = useQuery({
@@ -92,7 +116,7 @@ const MovieDetail = () => {
 
   const handleFavoriteToggle = () => {
     if (!isAuthenticated) {
-      alert('Please log in to add favorites');
+      alert(t('movieDetail.pleaseLoginFavorites'));
       return;
     }
 
@@ -104,8 +128,20 @@ const MovieDetail = () => {
   };
 
   const sendMessageMutation = useMutation({
-    mutationFn: (message) => chatAPI.sendMessage(message, id, conversationIdRef.current),
+    mutationFn: (message) => {
+      // Prevent double calls (React StrictMode)
+      if (isMutatingRef.current) {
+        return Promise.reject(new Error('Already mutating'));
+      }
+      isMutatingRef.current = true;
+      abortControllerRef.current = new AbortController();
+      setIsResponseStopped(false);
+      return chatAPI.sendMessage(message, id, conversationIdRef.current, abortControllerRef.current.signal);
+    },
     onSuccess: (response) => {
+      isMutatingRef.current = false;
+      if (isResponseStopped) return;
+
       // Save conversation_id for subsequent messages
       if (response.data.conversation_id) {
         conversationIdRef.current = response.data.conversation_id;
@@ -127,10 +163,23 @@ const MovieDetail = () => {
       queryClient.invalidateQueries({ queryKey: ['conversation', response.data.conversation_id] });
     },
     onError: (error) => {
+      isMutatingRef.current = false;
+      // Ignore "Already mutating" errors from StrictMode double-calls
+      if (error.message === 'Already mutating') return;
+
+      if (error.name === 'CanceledError' || isResponseStopped) {
+        const stoppedMessage = {
+          role: 'assistant',
+          content: t('chat.responseStopped'),
+          isStopped: true
+        };
+        setMessages(prev => [...prev, stoppedMessage]);
+        return;
+      }
       console.error('Chat error:', error);
       const errorMessage = {
         role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
+        content: t('chat.errorMessage'),
         isError: true
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -174,9 +223,9 @@ const MovieDetail = () => {
 };
 
   const quickQuestions = [
-    "What are the main themes?",
-    "Tell me about the characters",
-    "What's the significance of the ending?"
+    t('movieDetail.whatAreMainThemes'),
+    t('movieDetail.tellAboutCharacters'),
+    t('movieDetail.significanceOfEnding')
   ];
 
   useEffect(() => {
@@ -200,11 +249,11 @@ const MovieDetail = () => {
   if (!movie) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <h1 className="text-2xl font-bold">Movie not found</h1>
+        <h1 className="text-2xl font-bold">{t('movieDetail.movieNotFound')}</h1>
         <Button asChild>
           <Link to="/">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Home
+            {t('movieDetail.backToHome')}
           </Link>
         </Button>
       </div>
@@ -218,7 +267,7 @@ const MovieDetail = () => {
         <Button variant="ghost" asChild className="gap-2">
           <Link to="/movies">
             <ArrowLeft className="w-4 h-4" />
-            Back to Movies
+            {t('movieDetail.backToMovies')}
           </Link>
         </Button>
 
@@ -253,7 +302,7 @@ const MovieDetail = () => {
                         {movie.director && (
                           <>
                             <span>•</span>
-                            <span>Directed by {movie.director}</span>
+                            <span>{t('movieDetail.directedBy')} {movie.director}</span>
                           </>
                         )}
                       </div>
@@ -304,11 +353,11 @@ const MovieDetail = () => {
                         ) : (
                           <Heart className={cn("w-4 h-4", isFavorited && "fill-current")} />
                         )}
-                        {isFavorited ? 'Remove from Favorites' : 'Add to Favorites'}
+                        {isFavorited ? t('movieDetail.removeFromFavorites') : t('movieDetail.addToFavorites')}
                       </Button>
                       <Button variant="outline" className="gap-2">
                         <Share2 className="w-4 h-4" />
-                        Share
+                        {t('movieDetail.share')}
                       </Button>
                     </div>
                   </div>
@@ -320,7 +369,7 @@ const MovieDetail = () => {
             {movie.plot_summary && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Synopsis</CardTitle>
+                  <CardTitle>{t('movieDetail.synopsis')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className={cn(
@@ -336,7 +385,7 @@ const MovieDetail = () => {
                       onClick={() => setShowFullSynopsis(!showFullSynopsis)}
                       className="mt-2 gap-2"
                     >
-                      {showFullSynopsis ? 'Read Less' : 'Read More'}
+                      {showFullSynopsis ? t('movieDetail.readLess') : t('movieDetail.readMore')}
                       <ChevronDown className={cn("w-4 h-4 transition-transform", showFullSynopsis && "rotate-180")} />
                     </Button>
                   )}
@@ -348,7 +397,7 @@ const MovieDetail = () => {
             {cast.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Cast</CardTitle>
+                  <CardTitle>{t('movieDetail.cast')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -382,7 +431,7 @@ const MovieDetail = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-primary" />
-                    AI-Generated Analysis
+                    {t('movieDetail.aiGeneratedAnalysis')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -394,7 +443,7 @@ const MovieDetail = () => {
                       >
                         <div className="flex items-center gap-3">
                           <h3 className="font-semibold text-left">{section.section_type_display}</h3>
-                          <span className="text-xs text-muted-foreground">{section.word_count} words</span>
+                          <span className="text-xs text-muted-foreground">{section.word_count} {t('movieDetail.words')}</span>
                         </div>
                         <ChevronDown
                           className={cn(
@@ -409,7 +458,7 @@ const MovieDetail = () => {
                           <p className="text-muted-foreground leading-relaxed">{section.content}</p>
                           {section.key_topics && section.key_topics.length > 0 && (
                             <div className="space-y-2 pt-2">
-                              <span className="text-sm font-medium">Key Topics:</span>
+                              <span className="text-sm font-medium">{t('movieDetail.keyTopics')}:</span>
                               <div className="flex flex-wrap gap-2">
                                 {section.key_topics.map((topic, index) => (
                                   <span
@@ -434,7 +483,7 @@ const MovieDetail = () => {
             {similarMovies.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Similar Movies</CardTitle>
+                  <CardTitle>{t('movieDetail.similarMovies')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -474,136 +523,170 @@ const MovieDetail = () => {
                 <CardHeader className="flex-shrink-0 border-b">
                   <CardTitle className="flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-primary" />
-                    Chat with AI
+                    {t('movieDetail.chatWithAI')}
                   </CardTitle>
                   <CardDescription>
-                    Ask me anything about {movie.title}
+                    {t('movieDetail.askAboutMovie', { title: movie.title })}
                   </CardDescription>
                 </CardHeader>
 
-                {/* Messages */}
-                <div
-                  ref={messagesContainerRef}
-                  className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent hover:scrollbar-thumb-primary/40"
-                >
-                  {messages.length === 0 && (
-                    <div className="flex flex-col items-center justify-center h-full text-center space-y-3">
-                      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Sparkles className="w-6 h-6 text-primary" />
-                      </div>
-                      <p className="text-sm text-muted-foreground px-4">
-                        Ask me anything about this movie!
-                      </p>
+                {/* Login required check for chat */}
+                {!isAuthenticated ? (
+                  <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                      <Sparkles className="w-8 h-8 text-primary" />
                     </div>
-                  )}
-
-                  {messages.map((msg, index) => (
+                    <h3 className="text-lg font-semibold mb-2">{t('chat.loginRequired')}</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {t('chat.pleaseLoginToChat')}
+                    </p>
+                    <Button onClick={() => navigate('/login')} className="gap-2">
+                      <LogIn className="w-4 h-4" />
+                      {t('common.goToLogin')}
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    {/* Messages */}
                     <div
-                      key={index}
-                      className={cn(
-                        "flex gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300",
-                        msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'
-                      )}
+                      ref={messagesContainerRef}
+                      className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent hover:scrollbar-thumb-primary/40"
                     >
-                      {msg.role === 'assistant' && (
-                        <div className="w-7 h-7 rounded-md bg-card border flex items-center justify-center flex-shrink-0">
-                          <Sparkles className="w-3.5 h-3.5 text-primary" />
+                      {messages.length === 0 && (
+                        <div className="flex flex-col items-center justify-center h-full text-center space-y-3">
+                          <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Sparkles className="w-6 h-6 text-primary" />
+                          </div>
+                          <p className="text-sm text-muted-foreground px-4">
+                            {t('movieDetail.askAnythingAboutMovie')}
+                          </p>
                         </div>
                       )}
-                      <div
-                        className={cn(
-                          "flex flex-col gap-1",
-                          msg.role === 'user' ? 'items-end' : 'items-start',
-                          "max-w-[90%]"
-                        )}
-                      >
-                        <Card
+
+                      {messages.map((msg, index) => (
+                        <div
+                          key={index}
                           className={cn(
-                            "p-3",
-                            msg.role === 'user'
-                              ? 'bg-primary text-primary-foreground border-primary'
-                              : msg.isError
-                              ? 'bg-card border-destructive text-destructive'
-                              : 'bg-card border'
+                            "flex gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300",
+                            msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                           )}
                         >
-                          <div className="prose prose-sm dark:prose-invert max-w-none">
-                            <ReactMarkdown
-                              components={{
-                                p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                                ul: ({ children }) => <ul className="my-2 ml-4 list-disc">{children}</ul>,
-                                ol: ({ children }) => <ol className="my-2 ml-4 list-decimal">{children}</ol>,
-                                li: ({ children }) => <li className="my-1">{children}</li>,
-                                strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-                              }}
+                          {msg.role === 'assistant' && (
+                            <div className="w-7 h-7 rounded-md bg-card border flex items-center justify-center flex-shrink-0">
+                              <Sparkles className="w-3.5 h-3.5 text-primary" />
+                            </div>
+                          )}
+                          <div
+                            className={cn(
+                              "flex flex-col gap-1",
+                              msg.role === 'user' ? 'items-end' : 'items-start',
+                              "max-w-[90%]"
+                            )}
+                          >
+                            <Card
+                              className={cn(
+                                "p-3",
+                                msg.role === 'user'
+                                  ? 'bg-primary text-primary-foreground border-primary'
+                                  : msg.isError
+                                  ? 'bg-card border-destructive text-destructive'
+                                  : 'bg-card border'
+                              )}
                             >
-                              {msg.role === 'assistant' && isTyping && index === messages.length - 1
-                                ? typingMessage
-                                : msg.content}
-                            </ReactMarkdown>
+                              <div className="prose prose-sm dark:prose-invert max-w-none">
+                                <ReactMarkdown
+                                  components={{
+                                    p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                                    ul: ({ children }) => <ul className="my-2 ml-4 list-disc">{children}</ul>,
+                                    ol: ({ children }) => <ol className="my-2 ml-4 list-decimal">{children}</ol>,
+                                    li: ({ children }) => <li className="my-1">{children}</li>,
+                                    strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                                  }}
+                                >
+                                  {msg.role === 'assistant' && isTyping && index === messages.length - 1
+                                    ? typingMessage
+                                    : msg.content}
+                                </ReactMarkdown>
+                              </div>
+                            </Card>
                           </div>
-                        </Card>
-                      </div>
-                    </div>
-                  ))}
-
-                  {sendMessageMutation.isPending && (
-                    <div className="flex gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                      <div className="w-7 h-7 rounded-md bg-card border flex items-center justify-center flex-shrink-0">
-                        <Sparkles className="w-3.5 h-3.5 text-primary" />
-                      </div>
-                      <Card className="p-3 bg-card border">
-                        <div className="flex gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]"></span>
-                          <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]"></span>
-                          <span className="w-2 h-2 rounded-full bg-primary animate-bounce"></span>
                         </div>
-                      </Card>
+                      ))}
+
+                      {(sendMessageMutation.isPending || isTyping) && (
+                        <div className="flex gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                          <div className="w-7 h-7 rounded-md bg-card border flex items-center justify-center flex-shrink-0">
+                            <Sparkles className="w-3.5 h-3.5 text-primary" />
+                          </div>
+                          <Card className="p-3 bg-card border">
+                            <div className="flex gap-1.5">
+                              <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.3s]"></span>
+                              <span className="w-2 h-2 rounded-full bg-primary animate-bounce [animation-delay:-0.15s]"></span>
+                              <span className="w-2 h-2 rounded-full bg-primary animate-bounce"></span>
+                            </div>
+                          </Card>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
 
-                {/* Input */}
-                <CardContent className="flex-shrink-0 border-t p-4">
-                  <form onSubmit={handleSendMessage} className="flex gap-2">
-                    <Input
-                      type="text"
-                      value={chatMessage}
-                      onChange={(e) => setChatMessage(e.target.value)}
-                      placeholder="Ask about this movie..."
-                      className="flex-1"
-                    />
-                    <Button
-                      type="submit"
-                      size="icon"
-                      disabled={!chatMessage.trim() || sendMessageMutation.isPending}
-                    >
-                      <Send className="w-4 h-4" />
-                    </Button>
-                  </form>
-                </CardContent>
+                    {/* Input */}
+                    <CardContent className="flex-shrink-0 border-t p-4">
+                      <form onSubmit={handleSendMessage} className="flex gap-2">
+                        <Input
+                          type="text"
+                          value={chatMessage}
+                          onChange={(e) => setChatMessage(e.target.value)}
+                          placeholder={t('movieDetail.askAboutMoviePlaceholder')}
+                          disabled={sendMessageMutation.isPending || isTyping}
+                          className="flex-1"
+                        />
+                        {(sendMessageMutation.isPending || isTyping) ? (
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="destructive"
+                            onClick={handleStopResponse}
+                            title={t('chat.stopResponse')}
+                          >
+                            <StopCircle className="w-4 h-4" />
+                          </Button>
+                        ) : (
+                          <Button
+                            type="submit"
+                            size="icon"
+                            disabled={!chatMessage.trim()}
+                          >
+                            <Send className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </form>
+                    </CardContent>
+                  </>
+                )}
               </Card>
 
-              {/* Quick Questions - Below chat */}
-              <Card>
-                <CardContent className="p-4 space-y-3">
-                  <h4 className="text-sm font-medium">Quick Questions</h4>
-                  <div className="space-y-2">
-                    {quickQuestions.map((question, index) => (
-                      <Button
-                        key={index}
-                        variant="secondary"
-                        size="sm"
-                        className="w-full text-xs justify-start h-auto py-2"
-                        onClick={() => handleQuickQuestion(question)}
-                        disabled={sendMessageMutation.isPending}
-                      >
-                        {question}
-                      </Button>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Quick Questions - Below chat (only for authenticated users) */}
+              {isAuthenticated && (
+                <Card>
+                  <CardContent className="p-4 space-y-3">
+                    <h4 className="text-sm font-medium">{t('movieDetail.quickQuestions')}</h4>
+                    <div className="space-y-2">
+                      {quickQuestions.map((question, index) => (
+                        <Button
+                          key={index}
+                          variant="secondary"
+                          size="sm"
+                          className="w-full text-xs justify-start h-auto py-2"
+                          onClick={() => handleQuickQuestion(question)}
+                          disabled={sendMessageMutation.isPending}
+                        >
+                          {question}
+                        </Button>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </div>
