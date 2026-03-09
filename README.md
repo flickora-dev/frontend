@@ -1,16 +1,65 @@
-# React + Vite
+# Flickora — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend React platformy Flickora do odkrywania filmów z AI. Interfejs do przeglądania filmów, czatu z asystentem AI i zarządzania kontem.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React 18** + Vite
+- **Tailwind CSS** + shadcn/ui (komponenty Radix)
+- **TanStack Query** — pobieranie i cache danych
+- **Zustand** — stan globalny (auth, motyw)
+- **react-i18next** — tłumaczenia PL/EN
+- **vite-plugin-pwa** — PWA, service worker
 
-## React Compiler
+## Uruchomienie lokalne
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+```
 
-## Expanding the ESLint configuration
+Utwórz plik `.env`:
+```env
+VITE_API_URL=http://localhost:8000/api/
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm run dev      # http://localhost:5173
+npm run build    # build produkcyjny do dist/
+```
+
+## Docker
+
+```bash
+docker build --build-arg VITE_API_URL=http://localhost:8000/api/ -t flickora-frontend .
+docker run -d -p 3000:3000 flickora-frontend
+```
+
+## Zmienne środowiskowe
+
+| Zmienna | Wymagana | Opis |
+|---|---|---|
+| `VITE_API_URL` | Tak | Bazowy URL API backendu (musi zawierać `/api/`) |
+
+> Zmienna `VITE_API_URL` jest wbudowywana w build w czasie kompilacji. Przy deploymencie na Railway ustaw ją jako zmienną build, nie runtime.
+
+## Strony
+
+| Ścieżka | Opis |
+|---|---|
+| `/` | Strona główna — polecane i popularne filmy |
+| `/movies` | Katalog filmów z wyszukiwarką i filtrami |
+| `/movies/:id` | Szczegóły filmu z analizą AI i czatem |
+| `/trending` | Filmy na czasie |
+| `/chat` | Globalny czat z asystentem AI |
+| `/favorites` | Ulubione filmy użytkownika |
+| `/recent-chats` | Historia rozmów |
+| `/profile` | Profil i statystyki użytkownika |
+| `/settings` | Ustawienia (motyw, język, instalacja PWA) |
+
+## Wdrożenie (Railway)
+
+Konfiguracja w `railway.toml`. Ustaw `VITE_API_URL` jako zmienną build wskazującą na URL backendu.
+
+## Licencja
+
+MIT
