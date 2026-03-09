@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { authAPI, moviesAPI } from '../api';
@@ -32,16 +32,20 @@ const Profile = () => {
     queryKey: ['profile'],
     queryFn: authAPI.getProfile,
     enabled: isAuthenticated,
-    onSuccess: (data) => {
-      const userData = data?.data;
+  });
+
+  // Sync form data when profile loads (only when not editing)
+  useEffect(() => {
+    const userData = profileData?.data;
+    if (userData && !isEditing) {
       setFormData({
-        username: userData?.username || '',
-        email: userData?.email || '',
-        first_name: userData?.first_name || '',
-        last_name: userData?.last_name || ''
+        username: userData.username || '',
+        email: userData.email || '',
+        first_name: userData.first_name || '',
+        last_name: userData.last_name || '',
       });
     }
-  });
+  }, [profileData, isEditing]);
 
   // Fetch statistics
   const { data: favoritesData } = useQuery({
@@ -72,11 +76,18 @@ const Profile = () => {
   const updateMutation = useMutation({
     mutationFn: (data) => authAPI.updateProfile(data),
     onSuccess: (response) => {
-      queryClient.invalidateQueries(['profile']);
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
       useAuthStore.setState({ user: response.data });
       setIsEditing(false);
     }
   });
+
+  // Reset mutation status when entering edit mode
+  useEffect(() => {
+    if (isEditing) {
+      updateMutation.reset();
+    }
+  }, [isEditing]);
 
   // Delete account mutation
   const deleteAccountMutation = useMutation({
@@ -95,8 +106,7 @@ const Profile = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = () => {
     updateMutation.mutate(formData);
   };
 
@@ -173,8 +183,7 @@ const Profile = () => {
                   {t('profile.profileInformationDesc')}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
+              <CardContent className="space-y-4">
                   {/* Username */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium flex items-center gap-2">
@@ -251,11 +260,11 @@ const Profile = () => {
                     ) : (
                       <>
                         <Button
-                          type="submit"
-                          disabled={updateMutation.isLoading}
+                          onClick={handleSubmit}
+                          disabled={updateMutation.isPending}
                           className="gap-2"
                         >
-                          {updateMutation.isLoading ? (
+                          {updateMutation.isPending ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
                           ) : (
                             <Save className="w-4 h-4" />
@@ -266,7 +275,7 @@ const Profile = () => {
                           type="button"
                           variant="outline"
                           onClick={handleCancel}
-                          disabled={updateMutation.isLoading}
+                          disabled={updateMutation.isPending}
                         >
                           {t('common.cancel')}
                         </Button>
@@ -285,7 +294,6 @@ const Profile = () => {
                       {t('profile.updateSuccess')}
                     </p>
                   )}
-                </form>
               </CardContent>
             </Card>
 
@@ -483,7 +491,7 @@ const Profile = () => {
                 setShowDeleteDialog(false);
                 setDeleteConfirmText('');
               }}
-              disabled={deleteAccountMutation.isLoading}
+              disabled={deleteAccountMutation.isPending}
             >
               {t('common.cancel')}
             </Button>
@@ -491,10 +499,10 @@ const Profile = () => {
               type="button"
               variant="destructive"
               onClick={handleDeleteAccount}
-              disabled={deleteConfirmText !== 'DELETE' || deleteAccountMutation.isLoading}
+              disabled={deleteConfirmText !== 'DELETE' || deleteAccountMutation.isPending}
               className="gap-2"
             >
-              {deleteAccountMutation.isLoading ? (
+              {deleteAccountMutation.isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
                   {t('profile.deleting')}

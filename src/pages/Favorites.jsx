@@ -6,6 +6,7 @@ import { Heart, Loader2, Star, Trash2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import useAuthStore from '../store/authStore';
+import { DEFAULT_POSTER } from '../constants/images';
 
 const Favorites = () => {
   const queryClient = useQueryClient();
@@ -109,7 +110,7 @@ const Favorites = () => {
                   <Card className="overflow-hidden border-0 bg-card/50 hover:bg-card transition-all hover:scale-105 flex flex-col w-full h-full">
                     <div className="aspect-[2/3] relative overflow-hidden">
                       <img
-                        src={movie.poster_url || 'https://via.placeholder.com/300x450?text=No+Poster'}
+                        src={movie.poster_url || DEFAULT_POSTER}
                         alt={movie.title}
                         className="object-cover w-full h-full"
                         loading="lazy"

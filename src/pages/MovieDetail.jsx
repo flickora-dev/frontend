@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { moviesAPI } from '../api';
 import { chatAPI } from '../api/chat';
-import { Star, ArrowLeft, ChevronDown, Film, Heart, Share2, Send, Sparkles, Loader2, User, LogIn, StopCircle } from 'lucide-react';
+import { Star, ArrowLeft, ChevronDown, Heart, Share2, Send, Sparkles, Loader2, User, LogIn, StopCircle } from 'lucide-react';
 import { useState, useRef, useEffect  } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '../components/ui/button';
@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../co
 import { Separator } from '../components/ui/separator';
 import { cn } from '../lib/utils';
 import useAuthStore from '../store/authStore';
+import { DEFAULT_POSTER } from '../constants/images';
 
 const MovieDetail = () => {
   const { id } = useParams();
@@ -149,13 +150,12 @@ const MovieDetail = () => {
 
       setIsTyping(true);
       setTypingMessage('');
-      const aiMessagecontent = response.data.message;
       const aiMessage = {
         role: 'assistant',
         content: response.data.message,
         sources: response.data.sources
       };
-      typeMessage(aiMessagecontent);
+      typeMessage(response.data.message);
       setMessages(prev => [...prev, aiMessage]);
 
       // Invalidate conversations query to update Recent Chats page
@@ -176,7 +176,6 @@ const MovieDetail = () => {
         setMessages(prev => [...prev, stoppedMessage]);
         return;
       }
-      console.error('Chat error:', error);
       const errorMessage = {
         role: 'assistant',
         content: t('chat.errorMessage'),
@@ -230,7 +229,7 @@ const MovieDetail = () => {
 
   useEffect(() => {
     scrollToBottom();
-  } , [messages, sendMessageMutation.isPending]);
+  }, [messages, sendMessageMutation.isPending]);
 
   // Reset conversation when movie changes
   useEffect(() => {
@@ -281,7 +280,7 @@ const MovieDetail = () => {
                   {/* Poster */}
                   <div className="flex-shrink-0">
                     <img
-                      src={movie.poster_url || 'https://via.placeholder.com/300x450?text=No+Poster'}
+                      src={movie.poster_url || DEFAULT_POSTER}
                       alt={movie.title}
                       className="w-full md:w-48 rounded-lg object-cover shadow-lg"
                     />
@@ -496,7 +495,7 @@ const MovieDetail = () => {
                         <Card className="overflow-hidden border-0 bg-card/50 hover:bg-card transition-all hover:scale-105">
                           <div className="aspect-[2/3] relative overflow-hidden">
                             <img
-                              src={similar.poster_url || 'https://via.placeholder.com/200x300?text=No+Poster'}
+                              src={similar.poster_url || DEFAULT_POSTER}
                               alt={similar.title}
                               className="object-cover w-full h-full"
                             />

@@ -96,7 +96,6 @@ const Chat = () => {
         setMessages(prev => [...prev, stoppedMessage]);
         return;
       }
-      console.error('Chat error:', error);
       const errorMessage = {
         role: 'assistant',
         content: t('chat.errorMessage'),

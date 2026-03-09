@@ -127,7 +127,6 @@ const ConversationView = ({ conversation }) => {
         setLocalMessages(prev => [...prev, stoppedMessage]);
         return;
       }
-      console.error('Chat error:', error);
       const errorMessage = {
         id: Date.now() + 1,
         role: 'assistant',

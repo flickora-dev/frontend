@@ -1,11 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { moviesAPI } from '../api';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { TrendingUp, Loader2, Star, Flame } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
+import { DEFAULT_POSTER } from '../constants/images';
 
 const Trending = () => {
+  const { t } = useTranslation();
   const { data: trendingData, isLoading, isError } = useQuery({
     queryKey: ['trending'],
     queryFn: moviesAPI.getTrending
@@ -21,8 +24,8 @@ const Trending = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
-          <p className="text-destructive">Failed to load trending movies</p>
-          <Button onClick={() => window.location.reload()}>Retry</Button>
+          <p className="text-destructive">{t('movies.failedToLoad')}</p>
+          <Button onClick={() => window.location.reload()}>{t('common.retry')}</Button>
         </div>
       </div>
     );
@@ -34,12 +37,10 @@ const Trending = () => {
       <div className="bg-gradient-to-b from-primary/10 to-background py-8 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-3 mb-2">
-            <div className="relative">
-            </div>
-            <h1 className="text-4xl font-bold">Trending Movies</h1>
+            <h1 className="text-4xl font-bold">{t('trending.title')}</h1>
           </div>
           <p className="text-muted-foreground">
-            {isLoading ? 'Loading...' : `${movies.length} trending ${movies.length === 1 ? 'movie' : 'movies'} this week`}
+            {isLoading ? t('common.loading') : t('trending.moviesThisWeek', { count: movies.length })}
           </p>
         </div>
       </div>
@@ -54,13 +55,13 @@ const Trending = () => {
           <div className="text-center py-20 space-y-6">
             <TrendingUp className="w-20 h-20 mx-auto text-muted-foreground" />
             <div className="space-y-2">
-              <h2 className="text-2xl font-bold">No trending movies</h2>
+              <h2 className="text-2xl font-bold">{t('trending.noMovies')}</h2>
               <p className="text-muted-foreground max-w-md mx-auto">
-                Check back later for trending movies
+                {t('trending.noMoviesDesc')}
               </p>
             </div>
             <Button asChild>
-              <Link to="/movies">Browse All Movies</Link>
+              <Link to="/movies">{t('trending.browseAll')}</Link>
             </Button>
           </div>
         ) : (
@@ -70,7 +71,7 @@ const Trending = () => {
               <div className="space-y-4">
                 <h2 className="text-2xl font-bold flex items-center gap-2">
                   <Flame className="w-6 h-6 text-orange-500 fill-orange-500" />
-                  Top 3 This Week
+                  {t('trending.top3')}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {movies.slice(0, 3).map((movie, index) => (
@@ -87,7 +88,7 @@ const Trending = () => {
 
                         <div className="aspect-[2/3] relative overflow-hidden">
                           <img
-                            src={movie.poster_url || 'https://via.placeholder.com/300x450?text=No+Poster'}
+                            src={movie.poster_url || DEFAULT_POSTER}
                             alt={movie.title}
                             className="object-cover w-full h-full"
                             loading="lazy"
@@ -124,7 +125,7 @@ const Trending = () => {
             {/* All Trending Movies */}
             {movies.length > 3 && (
               <div className="space-y-4">
-                <h2 className="text-2xl font-bold">All Trending Movies</h2>
+                <h2 className="text-2xl font-bold">{t('trending.allMovies')}</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                   {movies.slice(3).map((movie, index) => (
                     <Link
@@ -142,7 +143,7 @@ const Trending = () => {
                           )}
 
                           <img
-                            src={movie.poster_url || 'https://via.placeholder.com/300x450?text=No+Poster'}
+                            src={movie.poster_url || DEFAULT_POSTER}
                             alt={movie.title}
                             className="object-cover w-full h-full"
                             loading="lazy"
@@ -183,7 +184,7 @@ const Trending = () => {
                     <Card className="overflow-hidden border-0 bg-card/50 hover:bg-card transition-all hover:scale-105 flex flex-col w-full h-full">
                       <div className="aspect-[2/3] relative overflow-hidden">
                         <img
-                          src={movie.poster_url || 'https://via.placeholder.com/300x450?text=No+Poster'}
+                          src={movie.poster_url || DEFAULT_POSTER}
                           alt={movie.title}
                           className="object-cover w-full h-full"
                           loading="lazy"

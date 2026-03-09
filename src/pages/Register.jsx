@@ -94,7 +94,6 @@ const Register = () => {
         }
       }
     } catch (err) {
-      console.error('Registration submission error:', err);
       setLocalError(t('auth.unexpectedError'));
     }
   };

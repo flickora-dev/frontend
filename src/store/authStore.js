@@ -33,8 +33,6 @@ const useAuthStore = create(
 
           return { success: true };
         } catch (error) {
-          console.error('Login error details:', error);
-          console.error('Response:', error.response);
           const errorMessage = error.response?.data?.error || 'Login failed';
           set({
             error: errorMessage,
@@ -71,9 +69,6 @@ const useAuthStore = create(
 
           return { success: true };
         } catch (error) {
-          console.error('Registration error details:', error);
-          console.error('Response:', error.response);
-
           // Extract error message from response
           const errorData = error.response?.data;
           let errorMessage = 'Registration failed';
@@ -119,7 +114,6 @@ const useAuthStore = create(
             });
           }
         } catch (error) {
-          console.error('Logout error:', error);
         } finally {
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
@@ -136,7 +130,6 @@ const useAuthStore = create(
           const response = await axios.get('/auth/profile/');
           set({ user: response.data });
         } catch (error) {
-          console.error('Get profile error:', error);
         }
       },
 

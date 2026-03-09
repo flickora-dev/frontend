@@ -10,9 +10,6 @@ const axiosInstance = axios.create({
   withCredentials: false,
 });
 
-console.log('API_URL:', API_URL);
-console.log("Env:", import.meta.env);
-
 // Request interceptor to add auth token
 axiosInstance.interceptors.request.use(
   (config) => {
@@ -38,7 +35,6 @@ axiosInstance.interceptors.response.use(
                            originalRequest.url?.includes('/auth/register');
 
     if (isAuthEndpoint) {
-      console.log('Auth endpoint error, skipping interceptor');
       return Promise.reject(error);
     }
 
@@ -64,8 +60,6 @@ axiosInstance.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${access}`;
         return axiosInstance(originalRequest);
       } catch (refreshError) {
-        // Refresh failed, logout user
-        console.error('Token refresh failed, redirecting to login');
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');

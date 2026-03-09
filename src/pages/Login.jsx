@@ -53,7 +53,6 @@ const Login = () => {
         }
       }
     } catch (err) {
-      console.error('Login submission error:', err);
       setLocalError(t('auth.unexpectedError'));
     }
   };

@@ -10,6 +10,7 @@ import { Input } from '../components/ui/input';
 import MultiSelect from '../components/ui/MultiSelect';
 import FilterModal from '../components/ui/FilterModal';
 import { cn } from '../lib/utils';
+import { DEFAULT_POSTER } from '../constants/images';
 
 const Movies = () => {
   const navigate = useNavigate();
@@ -88,8 +89,6 @@ const Movies = () => {
   const hasNextPage = !!moviesData?.data?.next;
   const hasPrevPage = !!moviesData?.data?.previous;
 
-  // Current year for validation
-  const currentYear = new Date().getFullYear();
 
   // Prepare options for MultiSelect components
   const genreOptions = useMemo(() =>
@@ -304,7 +303,7 @@ const Movies = () => {
                   <Card className="overflow-hidden border-0 bg-card/50 hover:bg-card transition-all hover:scale-105 flex flex-col w-full h-full">
                     <div className="aspect-[2/3] relative overflow-hidden">
                       <img
-                        src={movie.poster_url || 'https://via.placeholder.com/300x450?text=No+Poster'}
+                        src={movie.poster_url || DEFAULT_POSTER}
                         alt={movie.title}
                         className="object-cover w-full h-full"
                         loading="lazy"

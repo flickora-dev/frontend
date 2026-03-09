@@ -278,6 +278,22 @@
     "from": "Od",
     "to": "Do",
     "retry": "Spróbuj ponownie",
-    "goToLogin": "Przejdź do logowania"
+    "goToLogin": "Przejdź do logowania",
+    "howToInstall": "Jak zainstalować Flickora?",
+    "followInstructions": "Postępuj zgodnie z instrukcją poniżej",
+    "probablyInstalled": "Najprawdopodobniej aplikacja jest już zainstalowana!",
+    "checkInstructions": "Jeśli nie widzisz ikony aplikacji na ekranie głównym, sprawdź poniższe instrukcje"
+  },
+  "trending": {
+    "title": "Filmy na czasie",
+    "moviesThisWeek_one": "{{count}} film na czasie w tym tygodniu",
+    "moviesThisWeek_few": "{{count}} filmy na czasie w tym tygodniu",
+    "moviesThisWeek_many": "{{count}} filmów na czasie w tym tygodniu",
+    "moviesThisWeek_other": "{{count}} filmów na czasie w tym tygodniu",
+    "noMovies": "Brak filmów na czasie",
+    "noMoviesDesc": "Sprawdź ponownie później",
+    "browseAll": "Przeglądaj wszystkie filmy",
+    "top3": "Top 3 tego tygodnia",
+    "allMovies": "Wszystkie filmy na czasie"
   }
 }

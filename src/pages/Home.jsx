@@ -6,6 +6,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader } from '../components/ui/card';
 import { Separator } from '../components/ui/separator';
+import { DEFAULT_POSTER } from '../constants/images';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -147,7 +148,7 @@ const Home = () => {
                 <Card className="overflow-hidden border-0 bg-card/50 hover:bg-card transition-all hover:scale-105 flex flex-col w-full h-full">
                   <div className="aspect-[2/3] relative overflow-hidden">
                     <img
-                      src={movie.poster_url || 'https://via.placeholder.com/300x450?text=No+Poster'}
+                      src={movie.poster_url || DEFAULT_POSTER}
                       alt={movie.title}
                       className="object-cover w-full h-full"
                     />
@@ -187,7 +188,7 @@ const Home = () => {
                 <Card className="overflow-hidden border-0 bg-card/50 hover:bg-card transition-all hover:scale-105 flex flex-col w-full h-full">
                   <div className="aspect-[2/3] relative overflow-hidden">
                     <img
-                      src={movie.poster_url || 'https://via.placeholder.com/300x450?text=No+Poster'}
+                      src={movie.poster_url || DEFAULT_POSTER}
                       alt={movie.title}
                       className="object-cover w-full h-full"
                     />

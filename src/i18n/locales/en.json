@@ -268,6 +268,20 @@
     "from": "From",
     "to": "To",
     "retry": "Retry",
-    "goToLogin": "Go to Login"
+    "goToLogin": "Go to Login",
+    "howToInstall": "How to install Flickora?",
+    "followInstructions": "Follow the instructions below",
+    "probablyInstalled": "The app is probably already installed!",
+    "checkInstructions": "If you don't see the app icon on your home screen, check the instructions below"
+  },
+  "trending": {
+    "title": "Trending Movies",
+    "moviesThisWeek_one": "{{count}} trending movie this week",
+    "moviesThisWeek_other": "{{count}} trending movies this week",
+    "noMovies": "No trending movies",
+    "noMoviesDesc": "Check back later for trending movies",
+    "browseAll": "Browse All Movies",
+    "top3": "Top 3 This Week",
+    "allMovies": "All Trending Movies"
   }
 }

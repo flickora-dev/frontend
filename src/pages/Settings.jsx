@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Settings as SettingsIcon, Moon, Sun, Bell, Volume2, Eye, Download, Smartphone, Monitor } from 'lucide-react';
+import { Settings as SettingsIcon, Moon, Sun, Eye, Download, Smartphone, Monitor } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Separator } from '../components/ui/separator';
@@ -14,10 +14,6 @@ const Settings = () => {
   const { isAuthenticated } = useAuthStore();
   const { theme, setTheme } = useThemeStore();
   const { t } = useTranslation();
-
-  // Settings state (would be stored in localStorage or backend in production)
-  const [notifications, setNotifications] = useState(true);
-  const [autoplay, setAutoplay] = useState(true);
 
   // PWA Install state
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -51,32 +47,19 @@ const Settings = () => {
       const isIOSStandalone = window.navigator.standalone === true;
       const isAndroidApp = document.referrer.includes('android-app://');
 
-      // Debug logs
-      console.log('PWA Check:', {
-        standalone: isStandaloneMode,
-        iosStandalone: isIOSStandalone,
-        referrer: document.referrer,
-        displayMode: isStandaloneMode ? 'standalone' : 'browser'
-      });
-
       // Only return true if ACTUALLY running as standalone
       return isStandaloneMode || isIOSStandalone || isAndroidApp;
     };
 
     if (checkIfRunningAsStandalone()) {
-      console.log('PWA: Running in standalone mode');
       setIsInstalled(true);
       // Mark as installed in localStorage when running in standalone
       localStorage.setItem('pwa-was-installed', 'true');
       return;
     }
 
-    // If not running standalone, the app is opened in browser
-    console.log('PWA: Running in browser mode');
-
     // Listen for the beforeinstallprompt event (Chrome/Edge on Android/Desktop)
     const handleBeforeInstallPrompt = (e) => {
-      console.log('beforeinstallprompt event fired');
       e.preventDefault();
       setDeferredPrompt(e);
       setCanShowPrompt(true);
@@ -88,7 +71,6 @@ const Settings = () => {
 
     // Listen for successful installation
     const handleAppInstalled = () => {
-      console.log('appinstalled event fired');
       setIsInstalled(true);
       setDeferredPrompt(null);
       localStorage.setItem('pwa-was-installed', 'true');
@@ -113,10 +95,6 @@ const Settings = () => {
 
     // Wait for the user to respond to the prompt
     const { outcome } = await deferredPrompt.userChoice;
-
-    if (outcome === 'accepted') {
-      console.log('User accepted the install prompt');
-    }
 
     // Clear the deferredPrompt
     setDeferredPrompt(null);
@@ -195,88 +173,6 @@ const Settings = () => {
           </CardContent>
         </Card>
 
-        {/* Notifications */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="w-5 h-5" />
-              {t('settings.notifications')}
-            </CardTitle>
-            <CardDescription>
-              {t('settings.notificationsDesc')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">{t('settings.pushNotifications')}</p>
-                <p className="text-sm text-muted-foreground">
-                  {t('settings.pushNotificationsDesc')}
-                </p>
-              </div>
-              <button
-                onClick={() => setNotifications(!notifications)}
-                className={cn(
-                  "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
-                  notifications ? "bg-primary" : "bg-muted"
-                )}
-              >
-                <span
-                  className={cn(
-                    "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                    notifications ? "translate-x-6" : "translate-x-1"
-                  )}
-                />
-              </button>
-            </div>
-            <Separator />
-            <p className="text-xs text-muted-foreground">
-              {t('settings.notificationsFuture')}
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Playback */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Volume2 className="w-5 h-5" />
-              {t('settings.playback')}
-            </CardTitle>
-            <CardDescription>
-              {t('settings.playbackDesc')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">{t('settings.autoplayVideos')}</p>
-                <p className="text-sm text-muted-foreground">
-                  {t('settings.autoplayVideosDesc')}
-                </p>
-              </div>
-              <button
-                onClick={() => setAutoplay(!autoplay)}
-                className={cn(
-                  "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
-                  autoplay ? "bg-primary" : "bg-muted"
-                )}
-              >
-                <span
-                  className={cn(
-                    "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                    autoplay ? "translate-x-6" : "translate-x-1"
-                  )}
-                />
-              </button>
-            </div>
-            <Separator />
-            <p className="text-xs text-muted-foreground">
-              {t('settings.playbackFuture')}
-            </p>
-          </CardContent>
-        </Card>
-
         {/* PWA Install */}
         <Card>
           <CardHeader>
@@ -342,9 +238,9 @@ const Settings = () => {
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-500/10 mb-3 mx-auto">
                       <Download className="w-8 h-8 text-blue-500" />
                     </div>
-                    <p className="font-medium mb-1 text-center">Jak zainstalować Flickora?</p>
+                    <p className="font-medium mb-1 text-center">{t('settings.howToInstall')}</p>
                     <p className="text-sm text-muted-foreground mb-4 text-center">
-                      Postępuj zgodnie z instrukcją poniżej
+                      {t('settings.followInstructions')}
                     </p>
                   </>
                 ) : (
@@ -352,9 +248,9 @@ const Settings = () => {
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/10 mb-3">
                       <Download className="w-8 h-8 text-green-500" />
                     </div>
-                    <p className="font-medium mb-2 text-green-500">Najprawdopodobniej aplikacja jest już zainstalowana!</p>
+                    <p className="font-medium mb-2 text-green-500">{t('settings.probablyInstalled')}</p>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Jeśli nie widzisz ikony aplikacji na ekranie głównym, sprawdź poniższe instrukcje
+                      {t('settings.checkInstructions')}
                     </p>
                   </div>
                 )}

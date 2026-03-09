@@ -1,18 +1,20 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Home, Film, MessageCircle, Heart, User } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 const BottomNav = () => {
   const location = useLocation();
+  const { t } = useTranslation();
 
   const isActive = (path) => location.pathname === path;
 
   const navItems = [
-    { path: '/', icon: Home, label: 'Home' },
-    { path: '/movies', icon: Film, label: 'Movies' },
-    { path: '/chat', icon: MessageCircle, label: 'Chat' },
-    { path: '/favorites', icon: Heart, label: 'Favorites' },
-    { path: '/profile', icon: User, label: 'Profile' },
+    { path: '/', icon: Home, label: t('nav.home') },
+    { path: '/movies', icon: Film, label: t('nav.movies') },
+    { path: '/chat', icon: MessageCircle, label: t('nav.chat') },
+    { path: '/favorites', icon: Heart, label: t('nav.favorites') },
+    { path: '/profile', icon: User, label: t('nav.profile') },
   ];
 
   return (

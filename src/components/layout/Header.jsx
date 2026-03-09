@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Search, Bell, LogOut, User, Film, TrendingUp, Heart, Clock, MessageCircle, Settings, Check } from 'lucide-react';
+import { Search, LogOut, User, Film, TrendingUp, Heart, Clock, MessageCircle, Settings, Check } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -149,10 +149,6 @@ const Header = () => {
 
             {isAuthenticated ? (
               <>
-                <Button variant="ghost" size="icon" className="hidden lg:flex">
-                  <Bell className="h-5 w-5" />
-                </Button>
-
                 <Button
                   variant="ghost"
                   size="icon"
